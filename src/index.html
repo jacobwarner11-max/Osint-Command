@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OSINT Command Center</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header"><h1>🔍 OSINT Command</h1><p>Desktop v2.1</p></div>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#dashboard" class="nav-item active" data-view="dashboard"><span>📊</span> Dashboard</a>
+        <a href="#investigations" class="nav-item" data-view="investigations"><span>📁</span> Investigations <span class="badge" id="caseCount">0</span></a>
+        <a href="#tools" class="nav-item" data-view="tools"><span>🛠️</span> Tools</a>
+        <a href="#runner" class="nav-item" data-view="runner"><span>⚡</span> Tool Runner</a>
+        <a href="#settings" class="nav-item" data-view="settings"><span>⚙️</span> Settings</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="tool-status" id="toolStatusList">
+          <h4>Tool Status</h4>
+          <div class="status-item" id="sherlockStatus"><span class="dot"></span> Sherlock</div>
+          <div class="status-item" id="maigretStatus"><span class="dot"></span> Maigret</div>
+          <div class="status-item" id="holeheStatus"><span class="dot"></span> Holehe</div>
+          <div class="status-item" id="phoneinfogaStatus"><span class="dot"></span> PhoneInfoga</div>
+          <div class="status-item" id="theharvesterStatus"><span class="dot"></span> theHarvester</div>
+          <div class="status-item" id="subfinderStatus"><span class="dot"></span> Subfinder</div>
+          <div class="status-item" id="amassStatus"><span class="dot"></span> Amass</div>
+        </div>
+        <div class="app-info"><span id="platformInfo"></span></div>
+      </div>
+    </aside>
+    <main class="main">
+      <section class="view active" id="dashboard-view">
+        <header class="view-header"><h2>Dashboard</h2><button class="btn btn-primary" id="quickInvestigationBtn">🔍 New Investigation</button></header>
+        <div class="stats-grid">
+          <div class="stat-card"><h3>Active</h3><div class="stat-value" id="activeCount">0</div></div>
+          <div class="stat-card"><h3>Completed</h3><div class="stat-value" id="completedCount">0</div></div>
+          <div class="stat-card"><h3>Tools Ready</h3><div class="stat-value" id="toolsReady">0</div></div>
+          <div class="stat-card"><h3>Total Results</h3><div class="stat-value" id="resultsCount">0</div></div>
+        </div>
+        <div class="quick-actions"><h3>Quick Start</h3><div class="btn-group">
+          <button class="btn btn-primary" id="quickInvestigationBtn2">🔍 New Investigation</button>
+          <button class="btn btn-secondary" id="checkAllToolsBtn">🔧 Check Tools</button>
+          <button class="btn btn-secondary" id="refreshDashboardBtn">🔄 Refresh</button>
+        </div></div>
+        <section class="recent-activity"><h3>Recent Activity</h3><div id="activityList"></div></section>
+      </section>
+      <section class="view" id="investigations-view">
+        <header class="view-header"><h2>Investigations</h2><div class="header-actions">
+          <button class="btn btn-primary" id="createNewCaseBtn">+ New Case</button>
+          <button class="btn btn-secondary" id="loadCasesBtn">🔄 Refresh</button>
+        </div></header>
+        <div class="cases-list" id="casesList"></div>
+      </section>
+      <section class="view" id="tools-view">
+        <header class="view-header"><h2>Available Tools</h2><button class="btn btn-secondary" id="checkAllToolsBtn2">🔄 Check All</button></header>
+        <div class="tools-grid" id="toolsGrid"></div>
+      </section>
+      <section class="view" id="runner-view">
+        <header class="view-header"><h2>Tool Runner</h2></header>
+        <div class="runner-panel">
+          <div class="form-row">
+            <div class="form-group"><label for="runTarget">Target</label><input type="text" id="runTarget" placeholder="username, email, domain, phone..." maxlength="320"></div>
+            <div class="form-group"><label for="runTool">Tool</label><select id="runTool">
+              <option value="sherlock">Sherlock — Username search</option>
+              <option value="maigret">Maigret — Deep username investigation</option>
+              <option value="holehe">Holehe — Email registration check</option>
+              <option value="phoneinfoga">PhoneInfoga — Phone number OSINT</option>
+              <option value="theharvester">theHarvester — Domain enumeration</option>
+              <option value="subfinder">Subfinder — Subdomain discovery</option>
+              <option value="amass">Amass — Attack surface mapping</option>
+            </select></div>
+          </div>
+          <div class="form-row"><div class="form-group"><label for="runCaseId">Case ID (optional)</label><input type="text" id="runCaseId" placeholder="Auto-generated if empty" maxlength="80"></div></div>
+          <div class="runner-actions"><button class="btn btn-primary btn-large" id="runBtn" disabled>▶️ Execute Tool</button><button class="btn btn-danger btn-large" id="killBtn" disabled>⏹️ Stop</button></div>
+        </div>
+        <div class="console-output">
+          <div class="console-header"><span>Output</span><div class="console-controls">
+            <button class="icon-btn" id="clearConsoleBtn" aria-label="Clear console" title="Clear console">🗑️</button>
+            <button class="icon-btn" id="saveConsoleBtn" aria-label="Save console" title="Save console">💾</button>
+            <button class="icon-btn" id="openResultsFolderBtn" aria-label="Open results folder" title="Open results folder">📁</button>
+          </div></div>
+          <pre id="outputText">Select a tool, enter a target, and click "Execute Tool" to start...</pre>
+        </div>
+      </section>
+      <section class="view" id="settings-view">
+        <header class="view-header"><h2>Settings</h2></header>
+        <div class="settings-panel">
+          <div class="setting-section"><h3>Paths</h3><div class="setting-item"><label>Results Directory</label><code id="resultsPath">Loading...</code><button class="btn btn-sm btn-secondary" id="openResultsRootBtn">Open</button></div></div>
+          <div class="setting-section"><h3>Application</h3>
+            <div class="setting-item"><label>Version</label><span id="appVersion">2.1.1</span></div>
+            <div class="setting-item"><label>Platform</label><span id="platformInfo2"></span></div>
+            <div class="setting-item"><label>Electron</label><span id="electronVersion">—</span></div>
+            <div class="setting-item"><label>Node.js</label><span id="nodeVersion">—</span></div>
+          </div>
+          <div class="setting-section"><h3>Data Management</h3><button class="btn btn-danger" id="clearAllDataBtn">🗑️ Clear All Results</button></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="modal" id="newCaseModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content">
+      <h3 id="modalTitle">New Investigation</h3>
+      <div class="form-group"><label for="caseTitle">Case Title</label><input type="text" id="caseTitle" placeholder="e.g., Background Check #123" maxlength="200"></div>
+      <div class="form-group"><label for="caseTarget">Target</label><input type="text" id="caseTarget" placeholder="username, email, domain, phone" maxlength="320"></div>
+      <div class="form-group"><label for="caseType">Target Type</label><select id="caseType"><option value="username">Username</option><option value="email">Email</option><option value="domain">Domain</option><option value="phone">Phone</option></select></div>
+      <div class="form-group"><label for="caseNotes">Notes</label><textarea id="caseNotes" rows="3" maxlength="20000"></textarea></div>
+      <div class="modal-actions"><button class="btn btn-secondary" id="closeModalBtn">Cancel</button><button class="btn btn-primary" id="saveCaseBtn" disabled>Create &amp; Run</button></div>
+    </div>
+  </div>
+  <div class="modal" id="caseDetailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="modal-content large"><div class="modal-header"><h3 id="detailTitle">Case Details</h3><button class="icon-btn" id="closeDetailModalBtn" aria-label="Close case details">✕</button></div><div id="caseDetailContent"></div></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
