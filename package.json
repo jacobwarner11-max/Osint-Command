@@ -1,0 +1,31 @@
+{
+  "name": "osint-command-center",
+  "version": "2.1.1",
+  "private": true,
+  "description": "Desktop OSINT investigation platform",
+  "author": "OSINT Command Center",
+  "main": "main.js",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "test": "node --test test/*.test.js",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.osint.commandcenter",
+    "productName": "OSINT Command Center",
+    "copyright": "Copyright © 2026 OSINT Command Center",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "preload.js", "lib/**/*", "src/**/*", "package.json"],
+    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }, { "target": "portable", "arch": ["x64"] }] },
+    "mac": { "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }, { "target": "zip", "arch": ["x64", "arm64"] }], "category": "public.app-category.developer-tools" },
+    "linux": { "target": [{ "target": "AppImage", "arch": ["x64"] }, { "target": "deb", "arch": ["x64"] }], "category": "Development" }
+  },
+  "devDependencies": { "electron": "44.4.5", "electron-builder": "26.15.3" },
+  "dependencies": { "archiver": "7.0.1", "which": "4.0.0" }
+}
