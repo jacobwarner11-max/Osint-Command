@@ -16,7 +16,7 @@
     "dev": "electron . --dev",
     "test": "node --test test/*.test.js",
     "build": "electron-builder",
-    "build:chromebook": "electron-builder --linux deb --x64",
+    "build:chromebook": "electron-builder --linux deb --x64 --publish never",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
