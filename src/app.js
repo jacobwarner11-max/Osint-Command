@@ -375,7 +375,7 @@ async function saveCourtCase() {
     'No active-warrant determination has been made.',
     '',
     $('courtNotes').value.trim()
-  ].join('\\n');
+  ].join('\n');
   const caseId = 'case-' + crypto.randomUUID();
   $('saveCourtCaseBtn').disabled = true;
   try {
