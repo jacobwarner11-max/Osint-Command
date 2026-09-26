@@ -6,6 +6,33 @@ OSINT Command Center is a desktop Electron application for running a small set o
 
 2.1.1
 
+## Chromebook
+
+**Primary Chromebook build:** ChromeOS x86_64 using the built-in Linux development environment.
+
+GitHub now builds a Chromebook-ready Debian package automatically:
+
+`OSINT Command Center-2.1.1-linux-x64.deb`
+
+On the Chromebook:
+
+1. Open **Settings → Advanced → Developers → Linux development environment** and turn Linux on.
+2. Download the Chromebook build artifact from this repository's **Actions → Build Chromebook Package** workflow.
+3. Extract the downloaded artifact ZIP.
+4. In the Files app, double-click the `.deb` file and choose **Install with Linux**.
+5. Open **OSINT Command Center** from the ChromeOS launcher under **Linux apps**.
+
+The external OSINT command-line tools still run inside the Chromebook Linux environment, so any tool you want to use must also be installed there.
+
+To build it yourself inside Linux:
+
+```bash
+npm install
+npm run build:chromebook
+```
+
+The Chromebook build output is written to `dist/`.
+
 ## Included integrations
 
 - Sherlock — username discovery
@@ -31,12 +58,6 @@ Install dependencies:
 npm install
 ```
 
-Run the automated tests:
-
-```bash
-npm test
-```
-
 Start the app:
 
 ```bash
@@ -49,7 +70,7 @@ Start with Chromium developer tools:
 npm run dev
 ```
 
-## Build
+## Other builds
 
 Windows:
 
@@ -68,10 +89,6 @@ Linux:
 ```bash
 npm run build:linux
 ```
-
-Build output is written to `dist/`.
-
-The GitHub Actions Windows workflow runs the test suite, builds both the NSIS installer and portable Windows x64 package, and uploads the `dist/` output as a workflow artifact.
 
 ## Data and safety model
 
