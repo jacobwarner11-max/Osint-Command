@@ -9,6 +9,7 @@ const { CaseStore, validId, safePath, writeJSON } = require('./lib/store');
 const { TOOLS, getTool, validateTarget, resolveTool } = require('./lib/tools');
 const { startProcess } = require('./lib/process');
 const { createZip } = require('./lib/archive');
+const { getCourtSources, courtSourceUrl } = require('./lib/courts');
 
 let mainWindow, store;
 let clearing = false, quitting = false, mayQuit = false;
@@ -147,6 +148,8 @@ function registerIPC() {
     await entry.completion;
     return { success: true };
   });
+  handle('get-court-sources', (_event, category) => getCourtSources(category));
+  handle('open-court-source', (_event, id) => shell.openExternal(courtSourceUrl(id)));
   handle('get-all-cases', () => store.list());
   handle('get-results', (_event, id) => store.files(validId(id)));
   handle('save-case-meta', (_event, request) => {
