@@ -29,7 +29,7 @@ jobs:
         run: npm test
 
       - name: Build Windows packages
-        run: npm run build:win
+        run: npm run build:win -- --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
