@@ -1,0 +1,34 @@
+name: Build Chromebook Package
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-chromebook:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Chromebook x86_64 package
+        run: npm run build:chromebook
+
+      - name: Upload Chromebook installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: OSINT-Command-Center-Chromebook-x86_64
+          path: dist/*.deb
+          if-no-files-found: error
