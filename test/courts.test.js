@@ -25,5 +25,5 @@ test('arbitrary or unsafe URLs cannot be opened through source ids', () => {
 test('court case target allows names and case numbers but rejects control text', () => {
   assert.equal(validateTarget('court', "Jane Doe"), 'Jane Doe');
   assert.equal(validateTarget('court', '2026-CR-123'), '2026-CR-123');
-  assert.throws(() => validateTarget('court', 'Jane\\nDoe'), /Invalid court target/);
+  assert.throws(() => validateTarget('court', 'Jane\nDoe'), /Invalid target/);
 });
