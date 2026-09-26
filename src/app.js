@@ -49,7 +49,7 @@ async function initApp() {
   $('saveCaseBtn').disabled = true;
   try {
     catalog = await api.getTools();
-    await Promise.all([loadAppInfo(), checkAllTools(), loadDashboard()]);
+    await Promise.all([loadAppInfo(), checkAllTools(), loadDashboard(), loadCourtSources()]);
     loadTools();
     $('runBtn').disabled = false;
     $('saveCaseBtn').disabled = false;
@@ -68,6 +68,8 @@ function bindButtons() {
   bind('openResultsFolderBtn', () => currentCaseId ? api.openResultsFolder(currentCaseId) : undefined);
   bind('openResultsRootBtn', () => api.openResultsRoot());
   bind('clearAllDataBtn', clearAllData);
+  bind('saveCourtCaseBtn', saveCourtCase);
+  $('courtSourceCategory')?.addEventListener('change', () => loadCourtSources().catch(reportError));
   bind('closeModalBtn', closeModal);
   bind('saveCaseBtn', saveCase);
   bind('closeDetailModalBtn', closeDetailModal);
@@ -81,7 +83,7 @@ function setupNav() {
 }
 
 async function showView(view) {
-  if (!['dashboard', 'investigations', 'tools', 'runner', 'settings'].includes(view)) return;
+  if (!['dashboard', 'investigations', 'tools', 'runner', 'courts', 'settings'].includes(view)) return;
   document.querySelectorAll('.view').forEach(element => element.classList.toggle('active', element.id === `${view}-view`));
   document.querySelectorAll('.nav-item').forEach(element => element.classList.toggle('active', element.dataset.view === view));
   if (view === 'investigations') await loadCases();
@@ -305,6 +307,16 @@ async function openCaseDetail(id) {
   }
   if (!files.length) list.append(node('div', 'empty-state', 'No files'));
   results.append(list);
+  if (item.type === 'court') {
+    const notesEditor = node('textarea', 'court-note-edit');
+    notesEditor.value = item.notes || '';
+    notesEditor.maxLength = 20000;
+    info.append(node('h4', '', 'Research notes (editable)'), notesEditor,
+      button('Save notes', 'btn btn-secondary', async () => {
+        await api.saveCaseMeta({ caseId: id, meta: { notes: notesEditor.value } });
+        await openCaseDetail(id);
+      }));
+  }
   const actions = node('div', 'detail-section full');
   const buttons = node('div', 'detail-actions');
   buttons.append(button('📁 Open Folder', 'btn btn-primary', () => api.openResultsFolder(id)),
@@ -332,6 +344,46 @@ function loadTools() {
     card.append(header, node('p', '', tool.description), tags);
     return card;
   }));
+}
+
+async function loadCourtSources() {
+  const category = $('courtSourceCategory').value;
+  const sources = await api.getCourtSources(category);
+  if ($('courtSourceCategory').value !== category) return;
+  const cards = sources.map(source => {
+    const card = node('div', 'court-source');
+    card.append(node('h4', '', source.name),
+      node('div', 'court-source-meta', source.scope),
+      node('p', '', source.details),
+      node('div', 'court-source-url', source.url),
+      button('Open source ↗', 'btn btn-secondary', () => api.openCourtSource(source.id)));
+    return card;
+  });
+  $('courtSourcesList').replaceChildren(...cards);
+}
+
+async function saveCourtCase() {
+  const title = $('courtTitle').value.trim();
+  const target = $('courtSubject').value.trim();
+  if (!title || !target) throw new Error('Enter a case title and a person name or case number.');
+  const category = $('courtCategory').value;
+  const jurisdiction = $('courtJurisdiction').value;
+  const notes = [
+    'Research category: ' + category,
+    'Jurisdiction: ' + jurisdiction,
+    'Source verification: not yet conducted.',
+    'No active-warrant determination has been made.',
+    '',
+    $('courtNotes').value.trim()
+  ].join('\n');
+  const caseId = 'case-' + crypto.randomUUID();
+  $('saveCourtCaseBtn').disabled = true;
+  try {
+    await api.saveCaseMeta({ caseId, meta: { title, target, type: 'court', notes } });
+    await showView('investigations');
+    await loadDashboard();
+    await openCaseDetail(caseId);
+  } finally { $('saveCourtCaseBtn').disabled = false; }
 }
 
 async function loadAppInfo() {

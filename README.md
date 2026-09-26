@@ -4,7 +4,7 @@ OSINT Command Center is a desktop Electron application for running a small set o
 
 ## Current version
 
-2.1.1
+2.2.0 (proposed court-research module; not the previously installed 2.1.1 release)
 
 ## Chromebook
 
@@ -12,7 +12,7 @@ OSINT Command Center is a desktop Electron application for running a small set o
 
 GitHub now builds a Chromebook-ready Debian package automatically:
 
-`OSINT Command Center-2.1.1-linux-x64.deb`
+`OSINT Command Center-2.2.0-linux-amd64.deb`
 
 On the Chromebook:
 
@@ -32,6 +32,12 @@ npm run build:chromebook
 ```
 
 The Chromebook build output is written to `dist/`.
+
+## Court Records & Warrants (guided public-source research)
+
+A new navigation panel opens curated free public resources in an external browser, initially including Nueces County, the Texas Judicial Directory, Nueces County Sheriff's official contact directory, U.S. Marshals selected fugitive listings and the free CourtListener RECAP archive. Save a local court-research case with a subject and editable notes. Read [COURTS.md](COURTS.md) for coverage, limitations and future development plans.
+
+This is **not** an automated national criminal or warrant search. Results must be checked at their official source, and no result never means that no active warrant exists. No paid provider is required by this module; an external provider may offer optional fee-based records, which should be skipped.
 
 ## Included integrations
 

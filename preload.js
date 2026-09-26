@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld('electronAPI', Object.freeze({
     ipcRenderer.on('tool-progress', listener);
     return () => ipcRenderer.removeListener('tool-progress', listener);
   },
+  getCourtSources: category => ipcRenderer.invoke('get-court-sources', category),
+  openCourtSource: id => ipcRenderer.invoke('open-court-source', id),
   getAllCases: () => ipcRenderer.invoke('get-all-cases'),
   getResults: id => ipcRenderer.invoke('get-results', id),
   saveCaseMeta: request => ipcRenderer.invoke('save-case-meta', request),

@@ -74,3 +74,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .setting-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:12px}.setting-item:last-child{border-bottom:none}.setting-item label{color:var(--muted);font-size:13px}.setting-item code{font-family:var(--font-mono);font-size:12px;color:var(--text);word-break:break-all}.setting-item span{font-family:var(--font-mono);font-size:13px}
 :focus-visible{outline:2px solid var(--primary);outline-offset:3px}
 @media(max-width:900px){.sidebar{width:220px}.main{padding:20px}.stats-grid{grid-template-columns:repeat(2,1fr)}.form-row,.detail-grid{grid-template-columns:1fr}}
+
+/* Free public-records research directory */
+.court-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+.court-panel h3{margin:0 0 12px}
+.court-panel p{color:var(--muted);font-size:13px;line-height:1.6}
+.court-panel .court-warning{background:var(--bg);border:1px solid var(--border);padding:14px;border-radius:8px;color:var(--text);margin-bottom:18px}
+.court-sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+.court-source{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.court-source h4{font-size:14px;margin:0}
+.court-source-meta,.court-source-url{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.court-source p{margin:0;flex:1}
+.court-note-edit{width:100%;min-height:160px;max-width:100%;box-sizing:border-box;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font:inherit}

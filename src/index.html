@@ -10,12 +10,13 @@
 <body class="dark-theme">
   <div class="app">
     <aside class="sidebar">
-      <div class="sidebar-header"><h1>🔍 OSINT Command</h1><p>Desktop v2.1</p></div>
+      <div class="sidebar-header"><h1>🔍 OSINT Command</h1><p>Desktop v2.2</p></div>
       <nav class="nav" aria-label="Main navigation">
         <a href="#dashboard" class="nav-item active" data-view="dashboard"><span>📊</span> Dashboard</a>
         <a href="#investigations" class="nav-item" data-view="investigations"><span>📁</span> Investigations <span class="badge" id="caseCount">0</span></a>
         <a href="#tools" class="nav-item" data-view="tools"><span>🛠️</span> Tools</a>
         <a href="#runner" class="nav-item" data-view="runner"><span>⚡</span> Tool Runner</a>
+        <a href="#courts" class="nav-item" data-view="courts"><span>⚖️</span> Court Records &amp; Warrants</a>
         <a href="#settings" class="nav-item" data-view="settings"><span>⚙️</span> Settings</a>
       </nav>
       <div class="sidebar-footer">
@@ -86,12 +87,36 @@
           <pre id="outputText">Select a tool, enter a target, and click "Execute Tool" to start...</pre>
         </div>
       </section>
+      <section class="view" id="courts-view">
+        <header class="view-header"><h2>⚖️ Court Records &amp; Warrants</h2></header>
+        <div class="court-panel">
+          <p class="court-warning"><strong>Free-source research, not a live warrant clearance.</strong> Only freely accessible public information is included. A missing result does not establish that a warrant does not exist. Verify possible warrants directly with the issuing agency. Arrests and allegations are not convictions.</p>
+          <h3>Start a local court-research case</h3>
+          <p>Save your subject and research notes. Official sites open in your normal browser for a manual search. The app does not automatically retrieve court records or warrant status.</p>
+          <div class="form-row">
+            <div class="form-group"><label for="courtTitle">Case title</label><input id="courtTitle" type="text" maxlength="200" placeholder="e.g. County court research"></div>
+            <div class="form-group"><label for="courtSubject">Person or case number</label><input id="courtSubject" type="text" maxlength="200" placeholder="Name or docket number"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label for="courtJurisdiction">Jurisdiction</label><select id="courtJurisdiction"><option value="Texas / Nueces County">Texas / Nueces County</option><option value="Texas / other county">Texas / other county</option><option value="Federal">Federal</option><option value="Other / specify in notes">Other / specify in notes</option></select></div>
+            <div class="form-group"><label for="courtCategory">Research category</label><select id="courtCategory"><option value="Criminal court records">Criminal court records</option><option value="Civil court records">Civil court records</option><option value="Public arrest / booking records">Public arrest / booking records</option><option value="Public warrant verification">Public warrant verification</option><option value="Court dates and case history">Court dates and case history</option><option value="Federal records">Federal records</option></select></div>
+          </div>
+          <div class="form-group"><label for="courtNotes">Notes / source references</label><textarea id="courtNotes" rows="4" maxlength="18000" placeholder="Add source URLs, case numbers, source dates and what was or was not verified."></textarea></div>
+          <button class="btn btn-primary" id="saveCourtCaseBtn">📁 Save research case (no automatic search)</button>
+        </div>
+        <div class="court-panel">
+          <h3>Free research sources</h3>
+          <p>Open each official source yourself and review its access conditions. Never enter payment details. Some pages may offer optional fee-based documents; skip those.</p>
+          <div class="form-group"><label for="courtSourceCategory">Browse by type</label><select id="courtSourceCategory"><option value="all">All sources</option><option value="court">Court and clerk records</option><option value="warrants">Official warrant information / verification</option><option value="federal">Free federal records</option></select></div>
+          <div class="court-sources" id="courtSourcesList"><p>Loading sources...</p></div>
+        </div>
+      </section>
       <section class="view" id="settings-view">
         <header class="view-header"><h2>Settings</h2></header>
         <div class="settings-panel">
           <div class="setting-section"><h3>Paths</h3><div class="setting-item"><label>Results Directory</label><code id="resultsPath">Loading...</code><button class="btn btn-sm btn-secondary" id="openResultsRootBtn">Open</button></div></div>
           <div class="setting-section"><h3>Application</h3>
-            <div class="setting-item"><label>Version</label><span id="appVersion">2.1.1</span></div>
+            <div class="setting-item"><label>Version</label><span id="appVersion">2.2.0</span></div>
             <div class="setting-item"><label>Platform</label><span id="platformInfo2"></span></div>
             <div class="setting-item"><label>Electron</label><span id="electronVersion">—</span></div>
             <div class="setting-item"><label>Node.js</label><span id="nodeVersion">—</span></div>
