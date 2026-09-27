@@ -146,3 +146,12 @@ body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(
 .pearl-theme .btn-primary{background:#16555d;color:#fff}.pearl-theme .btn-primary:hover{background:#23717a}
 @media(max-width:1100px){.pearl-theme .module-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.pearl-theme .sidebar{width:180px}.pearl-theme .main{padding:12px}.pearl-theme .module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pearl-theme .dashboard-top h2{letter-spacing:.04em}.pearl-theme .dashboard-section-title span{display:none}}
+
+/* Header spacing correction after Chromebook screenshot */
+.pearl-theme .dashboard-top{position:relative;min-height:126px;align-items:center}
+.pearl-theme .dashboard-top>div{min-width:0;display:flex;flex-direction:column;gap:5px}
+.pearl-theme .dashboard-top .eyebrow,.pearl-theme .dashboard-top h2,.pearl-theme .dashboard-top .dashboard-subtitle{position:static!important;transform:none!important;margin:0!important;line-height:1.2!important}
+.pearl-theme .dashboard-top .dashboard-subtitle{letter-spacing:.13em}
+.pearl-theme .dashboard-top .btn{flex-shrink:0}
+.pearl-theme .sidebar-header .brand-shell{width:auto;height:105px;max-width:145px}
+@media(max-width:950px){.pearl-theme .dashboard-top{align-items:flex-start}.pearl-theme .dashboard-top h2{font-size:20px;letter-spacing:.04em}}
