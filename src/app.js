@@ -45,6 +45,12 @@ async function initApp() {
   setupNav();
   setupModals();
   bindButtons();
+  document.querySelectorAll('.module-card').forEach(card => card.addEventListener('click', () => {
+    const view = card.dataset.go;
+    void showView(view).then(() => {
+      if (view === 'runner' && card.dataset.tool) $('runTool').value = card.dataset.tool;
+    }).catch(reportError);
+  }));
   $('runBtn').disabled = true;
   $('saveCaseBtn').disabled = true;
   try {
