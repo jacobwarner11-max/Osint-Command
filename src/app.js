@@ -71,6 +71,10 @@ function setupBranding() {
 
 async function openModule(card) {
   const view = card.dataset.go;
+  if (view === 'new-case') {
+    createNewCase(card.dataset.type);
+    return;
+  }
   const startsSearch = view === 'runner' && card.dataset.tool;
   if (startsSearch && !isRunning && !creating) {
     // A new pathway must not reuse another search's target or case.
@@ -86,8 +90,9 @@ async function openModule(card) {
 
 function bindButtons() {
   ['quickInvestigationBtn', 'quickInvestigationBtn2', 'createNewCaseBtn'].forEach(id => bind(id, createNewCase));
-  ['checkAllToolsBtn', 'checkAllToolsBtn2'].forEach(id => bind(id, checkAllTools));
-  bind('refreshDashboardBtn', () => Promise.all([checkAllTools(), loadDashboard()]));
+  ['checkAllToolsBtn2', 'checkAllToolsBtnSettings'].forEach(id => bind(id, checkAllTools));
+  bind('viewCasesBtn', () => showView('investigations'));
+  bind('refreshDashboardBtn', loadDashboard);
   bind('loadCasesBtn', loadCases);
   bind('runBtn', runTool);
   bind('killBtn', killTool);
@@ -170,6 +175,7 @@ async function loadDashboard() {
   $('completedCount').textContent = cases.filter(item => item.status === 'complete').length;
   $('resultsCount').textContent = cases.reduce((sum, item) => sum + (item.resultCount || 0), 0);
   $('caseCount').textContent = cases.length;
+  $('casesTotal').textContent = cases.length;
   const items = cases.slice(0, 10).map(item => {
     const card = node('div', 'activity-item');
     const info = node('div', 'activity-info');
@@ -256,8 +262,9 @@ async function loadCases() {
   $('casesList').replaceChildren(...(cards.length ? cards : [node('div', 'empty-state', 'No cases yet.')]));
 }
 
-function createNewCase() {
+function createNewCase(preferredType) {
   if (isRunning) throw new Error('Wait for the current tool to finish, or stop it first.');
+  $('caseType').value = ['username', 'email', 'phone', 'domain'].includes(preferredType) ? preferredType : 'username';
   $('newCaseModal').classList.add('active');
   $('caseTitle').focus();
 }
