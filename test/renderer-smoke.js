@@ -41,11 +41,22 @@ app.whenReady().then(async () => {
   await window.loadFile(path.join(root, 'src', 'index.html'));
   await waitFor("!document.getElementById('runBtn').disabled");
 
-  const bytes = fs.readFileSync(path.join(root, 'src', 'assets', 'approved-emblem.png'));
+  const bytes = fs.readFileSync(path.join(root, 'src', 'assets', 'approved-emblem-transparent.png'));
   assert.deepEqual([...bytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   await waitFor("document.querySelector('.brand-shell').complete");
   assert.equal(await ui("document.querySelector('.brand-shell').naturalWidth > 0 && !document.querySelector('.brand-shell').hidden"), true);
-  console.log('PASS approved PNG loads');
+  console.log('PASS approved transparent PNG loads');
+  const desk = await ui(`({
+    categories: document.querySelectorAll('.module-grid > .module-card').length,
+    enabled: document.querySelectorAll('.module-card-active[data-go="new-case"]').length,
+    planned: document.querySelectorAll('.module-card-planned:not(button)').length,
+    healthView: document.getElementById('toolStatusList').closest('.view').id,
+    statusOnSidebar: Boolean(document.querySelector('.sidebar #toolStatusList')),
+    savedCases: document.getElementById('casesTotal').textContent
+  })`);
+  assert.deepEqual(desk, { categories: 6, enabled: 2, planned: 4,
+    healthView: 'settings-view', statusOnSidebar: false, savedCases: '7' });
+  console.log('PASS six categories, honest in-development cards and settings-only tool status');
 
   for (const [width, height] of [[1366, 768], [1000, 700]]) {
     window.setContentSize(width, height);
@@ -94,28 +105,32 @@ app.whenReady().then(async () => {
     document.getElementById('runBtn').click();`);
   await waitFor("document.getElementById('runTool').disabled");
   await ui("document.querySelector('[data-view=dashboard]').click()");
-  await ui("document.querySelector('[data-tool=sherlock]').click()");
-  await waitFor("document.getElementById('runner-view').classList.contains('active')");
+  await ui("document.querySelector('[data-view=runner]').click()");
   const active = await ui(`({ tool: document.getElementById('runTool').value,
     target: document.getElementById('runTarget').value, caseId: document.getElementById('runCaseId').value,
     locked: document.getElementById('runTool').disabled })`);
   assert.deepEqual(active, { tool: 'subfinder', target: 'example.com', caseId: 'fixture-domain', locked: true });
-  console.log('PASS active run keeps its tool, target and case');
+  console.log('PASS switching views during active run keeps tool, target and case');
 
   await ui("document.getElementById('killBtn').click()");
   await waitFor("!document.getElementById('runTool').disabled");
   await ui("document.querySelector('[data-view=dashboard]').click()");
-  await ui("document.querySelector('[data-tool=sherlock]').click()");
-  await waitFor("document.activeElement.id === 'runTarget'");
-  const next = await ui(`({ tool: document.getElementById('runTool').value,
-    target: document.getElementById('runTarget').value, caseId: document.getElementById('runCaseId').value })`);
-  assert.deepEqual(next, { tool: 'sherlock', target: '', caseId: '' });
-  console.log('PASS new username search clears previous case context');
+  await ui("document.querySelector('[data-category=people]').click()");
+  await waitFor("document.getElementById('newCaseModal').classList.contains('active')");
+  assert.equal(await ui("document.getElementById('caseType').value"), 'username');
+  await ui("document.getElementById('closeModalBtn').click()");
+  await ui("document.querySelector('[data-category=web]').click()");
+  assert.equal(await ui("document.getElementById('caseType').value"), 'domain');
+  await ui("document.getElementById('closeModalBtn').click()");
+  await ui("document.getElementById('quickInvestigationBtn').click()");
+  assert.equal(await ui("document.getElementById('caseType').value"), 'username');
+  await ui("document.getElementById('closeModalBtn').click()");
+  console.log('PASS category shortcuts open investigation with correct target type');
 
   await ui("document.querySelector('.brand-shell').src = 'assets/missing-test-emblem.png'");
   await waitFor("document.querySelector('.brand-shell').hidden");
   assert.equal(await ui("getComputedStyle(document.querySelector('.brand-shell')).display"), 'none');
-  await ui("document.querySelector('.brand-shell').src = 'assets/approved-emblem.png'");
+  await ui("document.querySelector('.brand-shell').src = 'assets/approved-emblem-transparent.png'");
   await waitFor("document.querySelector('.brand-shell').naturalWidth > 0 && !document.querySelector('.brand-shell').hidden");
   console.log('PASS failed image hides and recovered image returns');
 
