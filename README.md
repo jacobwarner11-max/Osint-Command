@@ -49,7 +49,13 @@ The external tools are **not bundled**. Install the tools you intend to use and 
 
 The pearl-and-platinum dashboard groups the research roadmap into six categories.
 The People & Identity and Organizations & Websites cards currently open the existing
-single-tool New Investigation workflow (with an appropriate starting target type).
+New Investigation workflow (with an appropriate starting target type).
+In a saved case, **Add tool run** offers only detected tools compatible with that case's
+target type. It prefills and locks the target and case ID in the runner until the user
+returns to normal Tool Runner navigation. Runs are launched individually and recorded
+in separate run directories with their own provenance manifests under the same case.
+The case summary's tool/status refers to its most recent run; earlier run records are
+retained separately. This does not imply automatic multi-tool orchestration or cross-source verification.
 The other four categories are clearly marked **In development** and are informational,
 not buttons: Vehicles & Assets; Public & Legal Records; Media & Documents; Places & History.
 They will only become interactive when their underlying workflows are implemented and tested.
