@@ -45,6 +45,19 @@ The Chromebook build output is written to `dist/`.
 
 The external tools are **not bundled**. Install the tools you intend to use and make sure their native executable or console entry point is available on PATH.
 
+## Dashboard research categories
+
+The pearl-and-platinum dashboard groups the research roadmap into six categories.
+The People & Identity and Organizations & Websites cards currently open the existing
+single-tool New Investigation workflow (with an appropriate starting target type).
+The other four categories are clearly marked **In development** and are informational,
+not buttons: Vehicles & Assets; Public & Legal Records; Media & Documents; Places & History.
+They will only become interactive when their underlying workflows are implemented and tested.
+
+Tool detection is under **Settings → System Health** instead of the primary dashboard.
+The main dashboard summarizes saved local cases and result files; it does not claim that
+planned modules or a complete multi-source evidence engine are already operational.
+
 ## Development
 
 Requirements:
