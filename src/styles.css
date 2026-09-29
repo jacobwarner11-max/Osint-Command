@@ -109,10 +109,12 @@ body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(
 /* Approved dashboard: structured pearl, platinum and deep-ocean composition */
 .pearl-theme{--bg:#f4f0e7;--card:#fffdf7;--border:#b7b5aa;--text:#18363a;--muted:#587077;--primary:#13535b;--success:#24724d;--radius:9px}
 .pearl-theme .app{background:repeating-linear-gradient(130deg,#f7f5ed 0,#f7f5ed 34px,#eeece4 35px,#f7f5ed 75px)}
-.pearl-theme .sidebar{background:linear-gradient(155deg,#fffdf8,#e9e9e2);border-right:3px double #9aa6a5;box-shadow:5px 0 15px #263d3d18}
-.pearl-theme .sidebar-header{background:linear-gradient(160deg,#e3ebe7,#fffdf7);text-align:center;border-bottom:3px double #a4aaa4;padding:16px}
-.pearl-theme .brand-shell{display:block;width:100%;height:190px;max-width:100%;max-height:none;object-fit:contain;margin:0 auto 12px}
+.pearl-theme .sidebar{background:linear-gradient(155deg,#fffdf8,#e9e9e2);border-right:3px double #9aa6a5;box-shadow:5px 0 15px #263d3d18;overflow-y:auto}
+.pearl-theme .sidebar-header{background:linear-gradient(160deg,#e3ebe7,#fffdf7);text-align:center;border-bottom:3px double #a4aaa4;padding:16px;flex-shrink:0}
+.pearl-theme .brand-shell{display:block;width:100%;height:300px;max-width:100%;max-height:none;object-fit:contain;transform:scale(1.12);transform-origin:center center;margin:18px auto 22px}
 .pearl-theme .brand-shell[hidden]{display:none}
+.pearl-theme .nav{flex:0 0 auto;overflow:visible}
+.pearl-theme .sidebar-footer{flex-shrink:0}
 .pearl-theme .sidebar-header h1{font-family:Georgia,serif;font-size:18px;letter-spacing:.07em;color:#174c52}
 .pearl-theme .nav-item{font-family:Georgia,serif;font-size:14px;border:1px solid transparent}
 .pearl-theme .nav-item.active{background:linear-gradient(120deg,#124b54,#26757a);color:#fff;border-color:#8baaa7}
