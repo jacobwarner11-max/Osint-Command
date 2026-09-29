@@ -70,6 +70,19 @@ Start with Chromium developer tools:
 npm run dev
 ```
 
+Check the core and dashboard behavior:
+
+```bash
+npm test
+npm run test:ui
+```
+
+The UI smoke check uses isolated sample cases and simulated tools. It checks
+the approved emblem, image failure handling, header layout at 1366×768 and
+1000×700, status contrast, and tool shortcuts during and after a run. It does
+not execute external OSINT tools or read your saved cases. A successful check
+does not replace opening the app with `npm start` on the Chromebook.
+
 ## Other builds
 
 Windows:

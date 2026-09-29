@@ -41,15 +41,13 @@ function bind(id, action) {
 }
 
 async function initApp() {
+  setupBranding();
   if (!api) { $('outputText').textContent = 'Start this application with Electron: npm start'; return; }
   setupNav();
   setupModals();
   bindButtons();
   document.querySelectorAll('.module-card').forEach(card => card.addEventListener('click', () => {
-    const view = card.dataset.go;
-    void showView(view).then(() => {
-      if (view === 'runner' && card.dataset.tool) $('runTool').value = card.dataset.tool;
-    }).catch(reportError);
+    void openModule(card).catch(reportError);
   }));
   $('runBtn').disabled = true;
   $('saveCaseBtn').disabled = true;
@@ -60,6 +58,30 @@ async function initApp() {
     $('runBtn').disabled = false;
     $('saveCaseBtn').disabled = false;
   } catch (error) { reportError(error); }
+}
+
+function setupBranding() {
+  document.querySelectorAll('.brand-shell').forEach(image => {
+    image.addEventListener('error', () => { image.hidden = true; });
+    image.addEventListener('load', () => { image.hidden = false; });
+    // A local image can finish loading before DOMContentLoaded fires.
+    if (image.complete && image.naturalWidth === 0) image.hidden = true;
+  });
+}
+
+async function openModule(card) {
+  const view = card.dataset.go;
+  const startsSearch = view === 'runner' && card.dataset.tool;
+  if (startsSearch && !isRunning && !creating) {
+    // A new pathway must not reuse another search's target or case.
+    currentCaseId = null;
+    $('runTarget').value = '';
+    $('runCaseId').value = '';
+    $('runTool').value = card.dataset.tool;
+    $('outputText').textContent = 'Enter a username and click "Execute Tool" to start a new investigation.\n';
+  }
+  await showView(view);
+  if (startsSearch && !isRunning && !creating) $('runTarget').focus();
 }
 
 function bindButtons() {

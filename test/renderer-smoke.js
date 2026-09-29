@@ -1,0 +1,129 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { app, BrowserWindow } = require('electron');
+
+const root = path.resolve(__dirname, '..');
+const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'osint-ui-smoke-'));
+app.setPath('userData', profile);
+app.disableHardwareAcceleration();
+app.on('quit', () => fs.rmSync(profile, { recursive: true, force: true }));
+const deadline = setTimeout(() => { console.error('UI smoke check timed out.'); app.exit(1); }, 30000);
+
+function contrast(fg, bg) {
+  const luminance = color => {
+    const rgb = color.match(/[\d.]+/g).slice(0, 3).map(Number).map(value => {
+      const channel = value / 255;
+      return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+  };
+  const a = luminance(fg), b = luminance(bg);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+app.whenReady().then(async () => {
+  const window = new BrowserWindow({ width: 1366, height: 768, show: false,
+    webPreferences: { offscreen: true, nodeIntegration: false, contextIsolation: true,
+      sandbox: true, preload: path.join(__dirname, 'fixtures', 'renderer-preload.js') } });
+  const ui = code => window.webContents.executeJavaScript(code);
+  const waitFor = condition => ui(`new Promise((resolve, reject) => {
+    const end = Date.now() + 5000;
+    const poll = () => {
+      if (${condition}) resolve();
+      else if (Date.now() > end) reject(new Error('UI condition timed out'));
+      else setTimeout(poll, 25);
+    }; poll();
+  })`);
+  await window.loadFile(path.join(root, 'src', 'index.html'));
+  await waitFor("!document.getElementById('runBtn').disabled");
+
+  const bytes = fs.readFileSync(path.join(root, 'src', 'assets', 'approved-emblem.png'));
+  assert.deepEqual([...bytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  await waitFor("document.querySelector('.brand-shell').complete");
+  assert.equal(await ui("document.querySelector('.brand-shell').naturalWidth > 0 && !document.querySelector('.brand-shell').hidden"), true);
+  console.log('PASS approved PNG loads');
+
+  for (const [width, height] of [[1366, 768], [1000, 700]]) {
+    window.setContentSize(width, height);
+    await waitFor(`innerWidth === ${width} && innerHeight === ${height}`);
+    const layout = await ui(`(() => {
+      const rect = selector => {
+        const r = document.querySelector(selector).getBoundingClientRect();
+        return { top: r.top, bottom: r.bottom, left: r.left, right: r.right };
+      };
+      return { header: rect('.dashboard-top'), title: rect('.dashboard-top h2'),
+        subtitle: rect('.dashboard-subtitle'), button: rect('#quickInvestigationBtn'),
+        text: rect('.dashboard-top > div'),
+        pseudo: getComputedStyle(document.querySelector('.dashboard-top'), '::before').content };
+    })()`);
+    assert.ok(['none', 'normal', '""'].includes(layout.pseudo), 'No duplicate generated subtitle');
+    assert.ok(layout.title.bottom <= layout.subtitle.top, 'Title and subtitle must not overlap');
+    const { button, text, header } = layout;
+    assert.ok(button.left >= text.right || button.top >= text.bottom || text.top >= button.bottom,
+      'Button and heading must not overlap');
+    for (const rect of [layout.title, layout.subtitle, button]) {
+      assert.ok(rect.left >= header.left && rect.right <= header.right &&
+        rect.top >= header.top && rect.bottom <= header.bottom, 'Header content stays inside its border');
+    }
+    if (process.env.OSINT_UI_SCREENSHOT_DIR) {
+      fs.mkdirSync(process.env.OSINT_UI_SCREENSHOT_DIR, { recursive: true });
+      // Give the offscreen compositor a frame at the new size before capture.
+      await new Promise(resolve => setTimeout(resolve, 150));
+      const capture = await window.webContents.capturePage();
+      fs.writeFileSync(path.join(process.env.OSINT_UI_SCREENSHOT_DIR, `dashboard-${width}.png`), capture.toPNG());
+    }
+    console.log(`PASS header at ${width}x${height}`);
+  }
+
+  const colors = await ui(`Array.from(document.querySelectorAll('.activity-status, #killBtn')).map(element => {
+    const style = getComputedStyle(element);
+    return { label: element.textContent, foreground: style.color, background: style.backgroundColor };
+  })`);
+  for (const color of colors) assert.ok(contrast(color.foreground, color.background) >= 4.5,
+    `${color.label} needs readable text contrast`);
+  console.log('PASS status and Stop text contrast');
+
+  await ui("document.querySelector('[data-view=runner]').click()");
+  await ui(`document.getElementById('runTarget').value = 'example.com';
+    document.getElementById('runCaseId').value = 'fixture-domain';
+    document.getElementById('runTool').value = 'subfinder';
+    document.getElementById('runBtn').click();`);
+  await waitFor("document.getElementById('runTool').disabled");
+  await ui("document.querySelector('[data-view=dashboard]').click()");
+  await ui("document.querySelector('[data-tool=sherlock]').click()");
+  await waitFor("document.getElementById('runner-view').classList.contains('active')");
+  const active = await ui(`({ tool: document.getElementById('runTool').value,
+    target: document.getElementById('runTarget').value, caseId: document.getElementById('runCaseId').value,
+    locked: document.getElementById('runTool').disabled })`);
+  assert.deepEqual(active, { tool: 'subfinder', target: 'example.com', caseId: 'fixture-domain', locked: true });
+  console.log('PASS active run keeps its tool, target and case');
+
+  await ui("document.getElementById('killBtn').click()");
+  await waitFor("!document.getElementById('runTool').disabled");
+  await ui("document.querySelector('[data-view=dashboard]').click()");
+  await ui("document.querySelector('[data-tool=sherlock]').click()");
+  await waitFor("document.activeElement.id === 'runTarget'");
+  const next = await ui(`({ tool: document.getElementById('runTool').value,
+    target: document.getElementById('runTarget').value, caseId: document.getElementById('runCaseId').value })`);
+  assert.deepEqual(next, { tool: 'sherlock', target: '', caseId: '' });
+  console.log('PASS new username search clears previous case context');
+
+  await ui("document.querySelector('.brand-shell').src = 'assets/missing-test-emblem.png'");
+  await waitFor("document.querySelector('.brand-shell').hidden");
+  assert.equal(await ui("getComputedStyle(document.querySelector('.brand-shell')).display"), 'none');
+  await ui("document.querySelector('.brand-shell').src = 'assets/approved-emblem.png'");
+  await waitFor("document.querySelector('.brand-shell').naturalWidth > 0 && !document.querySelector('.brand-shell').hidden");
+  console.log('PASS failed image hides and recovered image returns');
+
+  clearTimeout(deadline);
+  window.destroy();
+  app.quit();
+}).catch(error => {
+  console.error(error);
+  clearTimeout(deadline);
+  app.exit(1);
+});

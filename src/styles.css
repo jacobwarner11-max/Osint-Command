@@ -75,7 +75,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 :focus-visible{outline:2px solid var(--primary);outline-offset:3px}
 @media(max-width:900px){.sidebar{width:220px}.main{padding:20px}.stats-grid{grid-template-columns:repeat(2,1fr)}.form-row,.detail-grid{grid-template-columns:1fr}}
 
-/* Approved Pearl & Platinum dashboard skin. Visual-only; original behavior remains intact. */
+/* Pearl & Platinum application colors and surfaces. */
 :root{--bg:#f5f0e7;--card:#fffdf7;--border:#b7a995;--text:#182b30;--muted:#52696c;--primary:#075b60;--success:#147a53;--danger:#a53235;--radius:9px}
 body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(--text)}
 .app{background:radial-gradient(ellipse at 55% 12%,#fffefa 0%,#f1e8d9 80%); }
@@ -84,16 +84,12 @@ body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(
 .sidebar-header h1{font-size:22px;letter-spacing:.11em;text-transform:uppercase;color:#203a3b}
 .sidebar-header p{letter-spacing:.22em;text-transform:uppercase;color:#075b60}
 .brand-shell{display:block;max-width:150px;max-height:190px;object-fit:contain;margin:0 auto 12px}
-.brand-shell:not([src]){display:none}
 .nav-item{font-family:Arial,sans-serif;color:#30474a;border:1px solid transparent}
 .nav-item.active{background:linear-gradient(110deg,#075b60,#167e80);color:white;border-color:#b8a17a;box-shadow:0 2px 6px #153b3b25}
 .nav-item:hover{background:#e1ece8;color:#183e40}
 .badge{background:#075b60}
 .main{background:radial-gradient(ellipse at 40% 0,#fffefa,#f1e8d9);padding:24px}
 .view-header h2,.quick-actions h3,.recent-activity h3{font-family:Georgia,serif;color:#273d3e}
-#dashboard-view .view-header{background:linear-gradient(115deg,#083a42,#125a60 58%,#dfbd7c);border:3px double #bda879;border-radius:10px;padding:26px;min-height:140px;box-shadow:0 6px 18px #1b383526}
-#dashboard-view .view-header h2{color:#fff8e8;font-size:32px;letter-spacing:.08em}
-#dashboard-view .view-header:before{content:'RESEARCH  •  VERIFY  •  CORRELATE';position:absolute;margin-top:55px;color:#f4dba9;font-size:11px;letter-spacing:.2em}
 .stat-card,.quick-actions,.recent-activity,.runner-panel,.case-card,.tool-card,.setting-section,.detail-section{background:linear-gradient(150deg,#fffefa,#f6f0e6);border:1px solid #b6a68e;box-shadow:0 2px 7px #2b383319}
 .stat-card{border-top:3px solid #0c6668}
 .stat-value{color:#075b60}
@@ -108,7 +104,6 @@ body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(
 .console-header{background:#19353b;color:#f9edda}
 .modal-content{background:#fffaf0}
 .risk-badge.open{color:#14653e}
-@media(max-width:900px){#dashboard-view .view-header:before{display:none}.brand-shell{max-width:110px}}
 
 
 /* Approved dashboard: structured pearl, platinum and deep-ocean composition */
@@ -116,15 +111,18 @@ body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(
 .pearl-theme .app{background:repeating-linear-gradient(130deg,#f7f5ed 0,#f7f5ed 34px,#eeece4 35px,#f7f5ed 75px)}
 .pearl-theme .sidebar{background:linear-gradient(155deg,#fffdf8,#e9e9e2);border-right:3px double #9aa6a5;box-shadow:5px 0 15px #263d3d18}
 .pearl-theme .sidebar-header{background:linear-gradient(160deg,#e3ebe7,#fffdf7);text-align:center;border-bottom:3px double #a4aaa4;padding:16px}
-.pearl-theme .brand-shell{display:block;max-height:105px;max-width:135px;object-fit:contain;margin:0 auto 9px}
+.pearl-theme .brand-shell{display:block;width:auto;height:105px;max-height:105px;max-width:145px;object-fit:contain;margin:0 auto 9px}
+.pearl-theme .brand-shell[hidden]{display:none}
 .pearl-theme .sidebar-header h1{font-family:Georgia,serif;font-size:18px;letter-spacing:.07em;color:#174c52}
 .pearl-theme .nav-item{font-family:Georgia,serif;font-size:14px;border:1px solid transparent}
 .pearl-theme .nav-item.active{background:linear-gradient(120deg,#124b54,#26757a);color:#fff;border-color:#8baaa7}
 .pearl-theme .main{padding:22px 28px 40px}
-.pearl-theme .dashboard-top{padding:13px 18px;border:3px double #9aa8a5;background:#fffdf8;margin-bottom:15px}
-.pearl-theme .dashboard-top h2{font:700 clamp(20px,2.1vw,31px) Georgia,serif;letter-spacing:.13em;color:#164b51}
+.pearl-theme .dashboard-top{padding:18px;border:3px double #9aa8a5;border-radius:10px;background:#fffdf8;margin-bottom:15px;min-height:126px;box-shadow:0 4px 12px #15363a20}
+.pearl-theme .dashboard-top>div{flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:5px}
+.pearl-theme .dashboard-top h2{font:700 clamp(20px,2.1vw,31px) Georgia,serif;letter-spacing:.08em;line-height:1.2;color:#164b51}
+.pearl-theme .dashboard-top .btn{flex-shrink:0}
 .pearl-theme .eyebrow{font-size:10px;letter-spacing:.24em;color:#8c744c}
-.pearl-theme .dashboard-subtitle{font:italic 12px Georgia,serif;color:#667b78}
+.pearl-theme .dashboard-subtitle{font:italic 12px/1.2 Georgia,serif;letter-spacing:.13em;color:#4d6b66}
 .pearl-theme .hero-banner{position:relative;text-align:center;overflow:hidden;min-height:165px;padding:20px;border:5px double #c5c6bb;color:#fff7dc;background:radial-gradient(ellipse at 50% 100%,#9ab5ad 0%,#2b7378 38%,#143e4b 80%);box-shadow:inset 0 0 0 2px #fff8e6,0 4px 12px #15363a20}
 .pearl-theme .hero-banner:before,.pearl-theme .hero-banner:after{content:'❧';position:absolute;top:9px;font:45px Georgia,serif;color:#e5ded0;opacity:.7}
 .pearl-theme .hero-banner:before{left:17px}.pearl-theme .hero-banner:after{right:17px;transform:scaleX(-1)}
@@ -144,14 +142,13 @@ body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(
 .pearl-theme .recent-activity h3 small{font:11px sans-serif;color:#66746f}
 .pearl-theme .activity-item{background:#f8f8f2}
 .pearl-theme .btn-primary{background:#16555d;color:#fff}.pearl-theme .btn-primary:hover{background:#23717a}
+.pearl-theme .btn-danger{background:#8c292d;color:#fff;border:1px solid #8c292d}.pearl-theme .btn-danger:hover{background:#722225}
+.pearl-theme .activity-status.complete,.pearl-theme .case-status.complete{background:#dceddf;color:#205236}
+.pearl-theme .activity-status.failed,.pearl-theme .case-status.failed,.pearl-theme .activity-status.timed-out,.pearl-theme .case-status.timed-out{background:#f7dfdf;color:#852a2e}
+.pearl-theme .activity-status.running,.pearl-theme .case-status.running{background:#deebfa;color:#1e4e7a}
+.pearl-theme .activity-status.pending,.pearl-theme .case-status.pending{background:#fff2c6;color:#725716}
+.pearl-theme .activity-status.cancelled,.pearl-theme .case-status.cancelled,.pearl-theme .activity-status.interrupted,.pearl-theme .case-status.interrupted{background:#e6e7df;color:#4b5c61}
+.pearl-theme .risk-badge.regulated{background:#fff2c6;color:#725716}
+.pearl-theme .console-header .icon-btn{color:#e5eee7}.pearl-theme .console-header .icon-btn:hover{color:#fff}
 @media(max-width:1100px){.pearl-theme .module-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.pearl-theme .sidebar{width:180px}.pearl-theme .main{padding:12px}.pearl-theme .module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pearl-theme .dashboard-top h2{letter-spacing:.04em}.pearl-theme .dashboard-section-title span{display:none}}
-
-/* Header spacing correction after Chromebook screenshot */
-.pearl-theme .dashboard-top{position:relative;min-height:126px;align-items:center}
-.pearl-theme .dashboard-top>div{min-width:0;display:flex;flex-direction:column;gap:5px}
-.pearl-theme .dashboard-top .eyebrow,.pearl-theme .dashboard-top h2,.pearl-theme .dashboard-top .dashboard-subtitle{position:static!important;transform:none!important;margin:0!important;line-height:1.2!important}
-.pearl-theme .dashboard-top .dashboard-subtitle{letter-spacing:.13em}
-.pearl-theme .dashboard-top .btn{flex-shrink:0}
-.pearl-theme .sidebar-header .brand-shell{width:auto;height:105px;max-width:145px}
-@media(max-width:950px){.pearl-theme .dashboard-top{align-items:flex-start}.pearl-theme .dashboard-top h2{font-size:20px;letter-spacing:.04em}}
