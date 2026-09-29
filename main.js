@@ -9,6 +9,7 @@ const { CaseStore, validId, safePath, writeJSON } = require('./lib/store');
 const { TOOLS, getTool, validateTarget, resolveTool } = require('./lib/tools');
 const { startProcess } = require('./lib/process');
 const { createZip } = require('./lib/archive');
+const { captureRunEvidence, listCaseEvidence } = require('./lib/evidence');
 
 let mainWindow, store;
 let clearing = false, quitting = false, mayQuit = false;
@@ -60,6 +61,7 @@ async function runTool(event, request) {
   active.set(caseId, entry);
   entry.completion = (async () => {
     let runDirectory, executable, args, result;
+    let evidenceWarning = null;
     const started = Date.now();
     try {
       store.update(caseId, { title: existing?.title || `${config.name} investigation of ${target}`,
@@ -81,17 +83,25 @@ async function runTool(event, request) {
       result = { success: false, status: 'failed', error: error.message, duration: Date.now() - started };
     }
     try {
-      if (runDirectory) writeJSON(safePath(runDirectory, 'run.json'), { tool, target, caseId, runId,
-        executable, args, started, finished: Date.now(), status: result.status,
-        exitCode: result.exitCode ?? null, signal: result.signal ?? null, duration: result.duration, error: result.error });
-      store.update(caseId, { status: result.status, finished: Date.now(), duration: result.duration,
+      const finished = Date.now();
+      if (runDirectory) {
+        writeJSON(safePath(runDirectory, 'run.json'), { tool, target, caseId, runId,
+          executable, args, started, finished, status: result.status,
+          exitCode: result.exitCode ?? null, signal: result.signal ?? null, duration: result.duration, error: result.error });
+        try {
+          captureRunEvidence({ caseId, runId, runDirectory, tool, target, started, finished, status: result.status });
+        } catch (error) {
+          evidenceWarning = `Evidence manifest could not be captured: ${error.message}`;
+        }
+      }
+      store.update(caseId, { status: result.status, finished, duration: result.duration,
         exitCode: result.exitCode ?? null, error: result.error || null });
     } catch (error) {
       result = { ...result, success: false, status: 'failed', error: `${result.error || ''} Could not save case state: ${error.message}`.trim() };
     } finally {
       if (active.get(caseId) === entry) active.delete(caseId);
     }
-    return { ...result, caseId, runId, outputDirectory: runDirectory || null };
+    return { ...result, caseId, runId, outputDirectory: runDirectory || null, evidenceWarning };
   })();
   return entry.completion;
 }
@@ -149,6 +159,7 @@ function registerIPC() {
   });
   handle('get-all-cases', () => store.list());
   handle('get-results', (_event, id) => store.files(validId(id)));
+  handle('get-case-evidence', (_event, id) => listCaseEvidence(store.directory(validId(id)), id));
   handle('save-case-meta', (_event, request) => {
     const caseId = validId(request?.caseId);
     idleCase(caseId);
