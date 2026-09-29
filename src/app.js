@@ -228,6 +228,7 @@ async function runTool() {
     else if (result.status === 'cancelled') appendConsole('\n⏹️ Stopped\n');
     else appendConsole(`\n❌ ${result.error || `Tool exited with code ${result.exitCode}.`}\n`);
     if (result.outputDirectory) appendConsole(`Saved: ${result.outputDirectory}\n`);
+    if (result.evidenceWarning) appendConsole(`Warning: ${result.evidenceWarning}\n`);
   } catch (error) { appendConsole(`\n❌ ${error.message}\n`); }
   finally {
     progressCleanup?.();
@@ -317,7 +318,7 @@ function fileSize(bytes) {
 
 async function openCaseDetail(id) {
   const request = ++detailRequest;
-  const [cases, files] = await Promise.all([api.getAllCases(), api.getResults(id)]);
+  const [cases, files, manifests] = await Promise.all([api.getAllCases(), api.getResults(id), api.getCaseEvidence(id)]);
   if (request !== detailRequest) return;
   const item = cases.find(record => record.id === id);
   if (!item) throw new Error('Case not found.');
@@ -349,7 +350,22 @@ async function openCaseDetail(id) {
       if (result.success) { closeDetailModal(); await Promise.all([loadCases(), loadDashboard()]); }
     }));
   actions.append(node('h4', '', 'Actions'), buttons);
-  grid.append(info, results, actions);
+  const provenance = node('div', 'detail-section full');
+  provenance.append(node('h4', '', `Run provenance (${manifests.length})`));
+  provenance.append(node('p', 'provenance-note',
+    'These are locally captured tool outputs, not independently verified identities or original public sources. SHA-256 hashes are recorded at capture time; later changes are not automatically checked.'));
+  if (!manifests.length) provenance.append(node('p', 'provenance-note', 'No evidence manifests yet. Existing case files remain available above.'));
+  for (const manifest of manifests) {
+    const record = node('div', 'provenance-run');
+    record.append(node('strong', '', `${manifest.tool} · ${manifest.status} · ${new Date(manifest.started).toLocaleString()}`));
+    record.append(node('div', 'provenance-note', `${manifest.artifacts.length} tool output(s) · Review: unreviewed${manifest.truncated ? ' · Artifact listing truncated' : ''}`));
+    for (const artifact of manifest.artifacts) {
+      record.append(node('div', 'provenance-artifact',
+        `${artifact.name} · ${fileSize(artifact.size)} · SHA-256: ${artifact.sha256 || 'Not calculated (size limit)'}`));
+    }
+    provenance.append(record);
+  }
+  grid.append(info, results, provenance, actions);
   $('caseDetailContent').replaceChildren(grid);
   $('caseDetailModal').classList.add('active');
   $('closeDetailModalBtn').focus();
