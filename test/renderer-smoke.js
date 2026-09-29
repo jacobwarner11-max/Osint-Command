@@ -98,6 +98,16 @@ app.whenReady().then(async () => {
     `${color.label} needs readable text contrast`);
   console.log('PASS status and Stop text contrast');
 
+  await ui("document.querySelector('#activityList .activity-item').click()");
+  await waitFor("document.getElementById('caseDetailModal').classList.contains('active')");
+  const evidenceText = await ui("document.getElementById('caseDetailContent').textContent");
+  assert.match(evidenceText, /Run provenance \(1\)/);
+  assert.match(evidenceText, /unreviewed/);
+  assert.match(evidenceText, /not independently verified identities/);
+  assert.match(evidenceText, /stdout\.log/);
+  await ui("document.getElementById('closeDetailModalBtn').click()");
+  console.log('PASS case details show local provenance without treating matches as verified');
+
   await ui("document.querySelector('[data-view=runner]').click()");
   await ui(`document.getElementById('runTarget').value = 'example.com';
     document.getElementById('runCaseId').value = 'fixture-domain';
