@@ -46,7 +46,7 @@ async function initApp() {
   setupNav();
   setupModals();
   bindButtons();
-  document.querySelectorAll('.module-card').forEach(card => card.addEventListener('click', () => {
+  document.querySelectorAll('.module-card-active').forEach(card => card.addEventListener('click', () => {
     void openModule(card).catch(reportError);
   }));
   $('runBtn').disabled = true;
