@@ -108,6 +108,31 @@ app.whenReady().then(async () => {
   await ui("document.getElementById('closeDetailModalBtn').click()");
   console.log('PASS case details show local provenance without treating matches as verified');
 
+  await ui("document.querySelector('#activityList .activity-item').click()");
+  await waitFor("document.getElementById('caseDetailModal').classList.contains('active')");
+  assert.equal(await ui("Array.from(document.querySelectorAll('#caseDetailContent button')).some(button => button.textContent.includes('Add tool run'))"), true);
+  await ui("Array.from(document.querySelectorAll('#caseDetailContent button')).find(button => button.textContent.includes('Add tool run')).click()");
+  await waitFor("document.getElementById('runner-view').classList.contains('active')");
+  const followUp = await ui(`({
+    caseId: document.getElementById('runCaseId').value,
+    target: document.getElementById('runTarget').value,
+    locked: document.getElementById('runCaseId').readOnly && document.getElementById('runTarget').readOnly,
+    options: Array.from(document.getElementById('runTool').options).map(option => option.value),
+    tool: document.getElementById('runTool').value
+  })`);
+  assert.deepEqual(followUp, { caseId: 'fixture-complete', target: 'example.com', locked: true,
+    options: ['theharvester', 'subfinder', 'amass'], tool: 'theharvester' });
+  await ui("document.querySelector('[data-view=runner]').click()");
+  const freshRunner = await ui(`({
+    caseId: document.getElementById('runCaseId').value,
+    target: document.getElementById('runTarget').value,
+    editable: !document.getElementById('runCaseId').readOnly && !document.getElementById('runTarget').readOnly,
+    options: document.getElementById('runTool').options.length
+  })`);
+  assert.deepEqual(freshRunner, { caseId: '', target: '', editable: true, options: 7 });
+  console.log('PASS compatible follow-up tool keeps case context; normal Runner resets it');
+
+
   await ui("document.querySelector('[data-view=runner]').click()");
   await ui(`document.getElementById('runTarget').value = 'example.com';
     document.getElementById('runCaseId').value = 'fixture-domain';
