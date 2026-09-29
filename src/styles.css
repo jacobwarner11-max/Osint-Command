@@ -111,7 +111,7 @@ body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(
 .pearl-theme .app{background:repeating-linear-gradient(130deg,#f7f5ed 0,#f7f5ed 34px,#eeece4 35px,#f7f5ed 75px)}
 .pearl-theme .sidebar{background:linear-gradient(155deg,#fffdf8,#e9e9e2);border-right:3px double #9aa6a5;box-shadow:5px 0 15px #263d3d18}
 .pearl-theme .sidebar-header{background:linear-gradient(160deg,#e3ebe7,#fffdf7);text-align:center;border-bottom:3px double #a4aaa4;padding:16px}
-.pearl-theme .brand-shell{display:block;width:auto;height:105px;max-height:105px;max-width:145px;object-fit:contain;margin:0 auto 9px}
+.pearl-theme .brand-shell{display:block;width:100%;height:190px;max-width:100%;max-height:none;object-fit:contain;margin:0 auto 12px}
 .pearl-theme .brand-shell[hidden]{display:none}
 .pearl-theme .sidebar-header h1{font-family:Georgia,serif;font-size:18px;letter-spacing:.07em;color:#174c52}
 .pearl-theme .nav-item{font-family:Georgia,serif;font-size:14px;border:1px solid transparent}
