@@ -3,6 +3,7 @@
 const api = window.electronAPI;
 const $ = id => document.getElementById(id);
 let currentCaseId = null;
+let continuingCaseId = null;
 let isRunning = false;
 let creating = false;
 let catalog = [];
@@ -88,6 +89,46 @@ async function openModule(card) {
   if (startsSearch && !isRunning && !creating) $('runTarget').focus();
 }
 
+// A follow-up run is tied to one saved case. Normal Tool Runner navigation
+// explicitly restores its unrestricted (new-case) input controls.
+function selectRunnerTools(tools, preferredId) {
+  const select = $('runTool');
+  select.replaceChildren(...tools.map(tool => {
+    const option = node('option', '', tool.name + ' — ' + tool.description);
+    option.value = tool.id;
+    return option;
+  }));
+  if (tools.some(tool => tool.id === preferredId)) select.value = preferredId;
+}
+
+function resetRunnerContext() {
+  continuingCaseId = null;
+  currentCaseId = null;
+  $('runTarget').readOnly = false;
+  $('runCaseId').readOnly = false;
+  $('runTarget').value = '';
+  $('runCaseId').value = '';
+  selectRunnerTools(catalog, 'sherlock');
+}
+
+async function prepareFollowUpRun(item) {
+  if (isRunning || creating) throw new Error('Finish the current operation first.');
+  // Never offer incompatible or absent tools as working shortcuts.
+  const compatible = catalog.filter(tool => tool.type === item.type && installed.has(tool.id));
+  if (!compatible.length || !item.target) throw new Error('No compatible installed tool is available for this case.');
+  closeDetailModal();
+  continuingCaseId = item.id;
+  currentCaseId = item.id;
+  $('runTarget').value = item.target;
+  $('runCaseId').value = item.id;
+  $('runTarget').readOnly = true;
+  $('runCaseId').readOnly = true;
+  selectRunnerTools(compatible, compatible.find(tool => tool.id !== item.tool)?.id || compatible[0].id);
+  $('outputText').textContent = 'Choose a compatible installed tool and click Execute Tool. Results will be saved under the existing case.\n';
+  await showView('runner');
+  $('runTool').focus();
+}
+
 function bindButtons() {
   ['quickInvestigationBtn', 'quickInvestigationBtn2', 'createNewCaseBtn'].forEach(id => bind(id, createNewCase));
   ['checkAllToolsBtn2', 'checkAllToolsBtnSettings'].forEach(id => bind(id, checkAllTools));
@@ -109,6 +150,7 @@ function bindButtons() {
 function setupNav() {
   document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', event => {
     event.preventDefault();
+    if (item.dataset.view === 'runner' && !isRunning && !creating) resetRunnerContext();
     void showView(item.dataset.view).catch(reportError);
   }));
 }
@@ -293,6 +335,7 @@ async function saveCase() {
     await api.saveCaseMeta({ caseId, meta: { title, target, type, notes } });
     creating = false;
     closeModal();
+    resetRunnerContext();
     $('runTarget').value = target;
     $('runTool').value = selected;
     $('runCaseId').value = caseId;
@@ -343,7 +386,11 @@ async function openCaseDetail(id) {
   results.append(list);
   const actions = node('div', 'detail-section full');
   const buttons = node('div', 'detail-actions');
-  buttons.append(button('📁 Open Folder', 'btn btn-primary', () => api.openResultsFolder(id)),
+  const compatible = catalog.filter(tool => tool.type === item.type && installed.has(tool.id));
+  if (compatible.length && item.target && item.status !== 'running') {
+    buttons.append(button('＋ Add tool run', 'btn btn-primary', () => prepareFollowUpRun(item)));
+  }
+  buttons.append(button('📁 Open Folder', 'btn btn-secondary', () => api.openResultsFolder(id)),
     button('📦 Export ZIP', 'btn btn-secondary', () => api.exportCase({ caseId: id })),
     button('🗑️ Delete', 'btn btn-danger', async () => {
       const result = await api.deleteCase(id);
@@ -407,8 +454,7 @@ function setupModals() {
 async function clearAllData() {
   const result = await api.clearAllResults();
   if (result.success) {
-    currentCaseId = null;
-    $('runCaseId').value = '';
+    resetRunnerContext();
     closeDetailModal();
     await Promise.all([loadDashboard(), loadCases()]);
   }
