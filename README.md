@@ -116,6 +116,26 @@ Linux:
 npm run build:linux
 ```
 
+## Per-run evidence foundation (in development)
+
+Each executed local CLI run now writes an `evidence.json` manifest next to its
+`run.json` and output files. It records tool identity, case/run IDs, target,
+execution timestamps and status, and for each regular output file up to 500
+entries: relative name, size and SHA-256 (files over 100 MiB are marked
+unhashed). Existing cases with no manifest remain readable. Output manifests
+are excluded from result-file counts. Inspect them in a case's **Run provenance**
+section and in an exported case ZIP.
+
+The records are a local audit aid, not tamper-proof storage. Hashes are taken
+when the run ends; a later change to the file is **not** automatically detected
+or independently verified. CLI output is labeled **unreviewed**. A tool match
+is not a confirmed identity, and a CLI result is not itself an independently
+verified original source. No new paid APIs or third-party accounts are used by
+this evidence foundation. Existing external tools still require installation.
+
+This is the first piece of a multi-source engine, **not** automatic cross-source
+correlation, verification, or a complete 21-module implementation.
+
 ## Data and safety model
 
 Investigation data is stored locally under Electron's application user-data directory. The application validates case IDs and target formats, blocks path traversal and symlink traversal in the results store, restricts renderer IPC to the trusted main frame, disables renderer Node integration, denies new-window/navigation requests, and executes tools without a shell.
