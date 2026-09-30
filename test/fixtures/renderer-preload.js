@@ -14,10 +14,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAllCases: async () => statuses.map(status => ({ id: `fixture-${status}`,
     title: `Sample ${status} case`, target: 'example.com', type: 'domain',
     status, tool: 'subfinder', created: 1, resultCount: 0 })),
-  getResults: async () => [],
-  getCaseEvidence: async () => [{ runId: 'run-fixture', tool: 'subfinder', status: 'complete',
-    started: 1, reviewStatus: 'unreviewed', truncated: false,
-    artifacts: [{ name: 'stdout.log', size: 12, sha256: '0'.repeat(64) }] }],
+  getResults: async () => ['meta.json', 'run-fixture/run.json', 'run-fixture/evidence.json', 'run-fixture/stdout.log']
+    .map(name => ({ name, size: 12 })),
+  getCaseEvidence: async id => {
+    if (id === 'fixture-failed') throw new Error('Simulated evidence read failure.');
+    if (id === 'fixture-cancelled') return { records: [], warnings: [
+      { runId: 'run-fixture', message: 'Evidence manifest could not be captured: simulated output read error.' }
+    ] };
+    return { records: [{ runId: 'run-fixture', tool: 'subfinder', status: 'complete',
+      started: 1, reviewStatus: 'unreviewed', truncated: false,
+      artifacts: [{ name: 'stdout.log', size: 12, sha256: '0'.repeat(64) }] }], warnings: [] };
+  },
   getAppInfo: async () => ({ platform: process.platform, arch: process.arch,
     versions: process.versions, resultsDir: 'Isolated UI test data', appVersion: 'test' }),
   onToolProgress: () => () => {},

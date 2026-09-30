@@ -361,7 +361,9 @@ function fileSize(bytes) {
 
 async function openCaseDetail(id) {
   const request = ++detailRequest;
-  const [cases, files, manifests] = await Promise.all([api.getAllCases(), api.getResults(id), api.getCaseEvidence(id)]);
+  const [cases, files, evidence] = await Promise.all([api.getAllCases(), api.getResults(id),
+    api.getCaseEvidence(id).catch(error => ({ records: [], warnings: [{ message: `Provenance unavailable: ${error.message}` }] }))]);
+  const { records: manifests, warnings } = evidence;
   if (request !== detailRequest) return;
   const item = cases.find(record => record.id === id);
   if (!item) throw new Error('Case not found.');
@@ -370,9 +372,10 @@ async function openCaseDetail(id) {
   const info = node('div', 'detail-section');
   info.append(node('h4', '', 'Case Info'));
   for (const [label, value] of [['Case ID', id], ['Title', item.title], ['Target', item.target], ['Type', item.type], ['Tool', item.tool],
-    ['Status', statusBadge(item.status, 'case-status')], ['Created', item.created ? new Date(item.created).toLocaleString() : '—'], ['Notes', item.notes], ['Error', item.error]]) info.append(row(label, value));
+    ['Status', statusBadge(item.status, 'case-status')], ['Created', item.created ? new Date(item.created).toLocaleString() : '—'],
+    ['Notes', item.notes], ['Error', item.error], ['Provenance capture', item.evidenceStatus], ['Provenance warning', item.evidenceWarning]]) info.append(row(label, value));
   const results = node('div', 'detail-section');
-  results.append(node('h4', '', `Results (${files.length})`));
+  results.append(node('h4', '', `Case files (${files.length})`));
   const list = node('div', 'results-list');
   for (const file of files) {
     const line = node('div', 'result-file');
@@ -402,6 +405,9 @@ async function openCaseDetail(id) {
   provenance.append(node('p', 'provenance-note',
     'These are locally captured tool outputs, not independently verified identities or original public sources. SHA-256 hashes are recorded at capture time; later changes are not automatically checked.'));
   if (!manifests.length) provenance.append(node('p', 'provenance-note', 'No evidence manifests yet. Existing case files remain available above.'));
+  for (const warning of warnings) {
+    provenance.append(node('p', 'provenance-note', `Warning: ${warning.runId ? warning.runId + ' · ' : ''}${warning.message}`));
+  }
   for (const manifest of manifests) {
     const record = node('div', 'provenance-run');
     record.append(node('strong', '', `${manifest.tool} · ${manifest.status} · ${new Date(manifest.started).toLocaleString()}`));

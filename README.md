@@ -53,7 +53,7 @@ New Investigation workflow (with an appropriate starting target type).
 In a saved case, **Add tool run** offers only detected tools compatible with that case's
 target type. It prefills and locks the target and case ID in the runner until the user
 returns to normal Tool Runner navigation. Runs are launched individually and recorded
-in separate run directories with their own provenance manifests under the same case.
+in separate run directories under the same case, with best-effort provenance capture.
 The case summary's tool/status refers to its most recent run; earlier run records are
 retained separately. This does not imply automatic multi-tool orchestration or cross-source verification.
 The other four categories are clearly marked **In development** and are informational,
@@ -124,12 +124,18 @@ npm run build:linux
 
 ## Per-run evidence foundation (in development)
 
-Each executed local CLI run now writes an `evidence.json` manifest next to its
-`run.json` and output files. It records tool identity, case/run IDs, target,
+After a run finishes, the app attempts to capture a local `evidence.json` manifest
+next to its `run.json` and output files. Capture failures and interrupted runs can
+leave provenance unavailable. Capture status and failure warnings are saved with
+the run and shown when the case is reopened. Tool completion is separate from
+provenance capture success. A manifest records tool identity, case/run IDs, target,
 execution timestamps and status, and for each regular output file up to 500
-entries: relative name, size and SHA-256 (files over 100 MiB are marked
-unhashed). Existing cases with no manifest remain readable. Output manifests
-are excluded from result-file counts. Inspect them in a case's **Run provenance**
+entries within a 1 MiB manifest limit: relative name, size and SHA-256 (files over
+100 MiB are marked unhashed). Entry, traversal-depth or manifest-size limits mark
+the artifact listing as truncated. Existing cases with no manifest remain readable.
+Unreadable manifests produce warnings without blocking case files or other valid
+run records. Output manifests are excluded from dashboard result-file counts;
+**Case files** lists all saved files, including metadata. Inspect manifests in **Run provenance**
 section and in an exported case ZIP.
 
 The records are a local audit aid, not tamper-proof storage. Hashes are taken

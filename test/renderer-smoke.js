@@ -105,8 +105,22 @@ app.whenReady().then(async () => {
   assert.match(evidenceText, /unreviewed/);
   assert.match(evidenceText, /not independently verified identities/);
   assert.match(evidenceText, /stdout\.log/);
+  assert.match(evidenceText, /Case files \(4\)/);
   await ui("document.getElementById('closeDetailModalBtn').click()");
   console.log('PASS case details show local provenance without treating matches as verified');
+
+  for (const [id, expected] of [['fixture-failed', /Provenance unavailable: Simulated evidence read failure/],
+    ['fixture-cancelled', /Evidence manifest could not be captured: simulated output read error/]]) {
+    await ui(`openCaseDetail('${id}')`);
+    const text = await ui("document.getElementById('caseDetailContent').textContent");
+    assert.match(text, expected);
+    assert.match(text, /Case files \(4\)/);
+    assert.match(text, /stdout\.log/);
+    assert.match(text, /Export ZIP/);
+    assert.equal(await ui("document.getElementById('caseDetailModal').classList.contains('active')"), true);
+    await ui("document.getElementById('closeDetailModalBtn').click()");
+  }
+  console.log('PASS unavailable provenance and saved capture warnings preserve case file access');
 
   await ui("document.querySelector('#activityList .activity-item').click()");
   await waitFor("document.getElementById('caseDetailModal').classList.contains('active')");
