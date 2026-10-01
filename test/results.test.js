@@ -64,11 +64,15 @@ test('Maigret simple JSON keeps provider tags as site tags, not interests', () =
       status: { username: 'Majn998', url: 'https://www.artstation.com/Majn998', tags: ['design', 'art'], ids: {} }
     }
   }));
+  fs.writeFileSync(path.join(runDirectory, 'stdout.log'),
+    '[!] Too many errors of type "Bot protection" (8.45%). Try to switch to another ip address\n');
 
   normalizeRun({ caseId, runId, runDirectory, tool: 'maigret', target: 'Majn998',
-    runStatus: 'complete', evidence: evidence(name) });
+    runStatus: 'complete', evidence: evidence(name, 'stdout.log') });
   const listed = listCaseFindings(caseDirectory, caseId);
   assert.equal(listed.reportedCount, 2);
+  assert.equal(listed.warnings.length, 1);
+  assert.match(listed.warnings[0].message, /8\.45% Bot protection.*inconclusive/i);
   const github = listed.findings.find(item => item.site === 'GitHub');
   assert.deepEqual(github.siteTags, ['coding', 'us']);
   assert.equal(Object.hasOwn(github, 'interests'), false);
