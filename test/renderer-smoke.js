@@ -104,17 +104,21 @@ app.whenReady().then(async () => {
   assert.match(evidenceText, /Run provenance \(1\)/);
   assert.match(evidenceText, /unreviewed/);
   assert.match(evidenceText, /not independently verified identities/);
+  assert.match(evidenceText, /Normalized findings \(1 unique · 2 reported\)/);
+  assert.match(evidenceText, /Example · corroborated/);
+  assert.match(evidenceText, /Site tags \(provider metadata\): social/);
+  assert.match(evidenceText, /does not verify the account owner’s identity/);
   assert.match(evidenceText, /stdout\.log/);
-  assert.match(evidenceText, /Case files \(4\)/);
+  assert.match(evidenceText, /Case files \(5\)/);
   await ui("document.getElementById('closeDetailModalBtn').click()");
-  console.log('PASS case details show local provenance without treating matches as verified');
+  console.log('PASS case details show normalized findings and local provenance without treating matches as verified');
 
   for (const [id, expected] of [['fixture-failed', /Provenance unavailable: Simulated evidence read failure/],
     ['fixture-cancelled', /Evidence manifest could not be captured: simulated output read error/]]) {
     await ui(`openCaseDetail('${id}')`);
     const text = await ui("document.getElementById('caseDetailContent').textContent");
     assert.match(text, expected);
-    assert.match(text, /Case files \(4\)/);
+    assert.match(text, /Case files \(5\)/);
     assert.match(text, /stdout\.log/);
     assert.match(text, /Export ZIP/);
     assert.equal(await ui("document.getElementById('caseDetailModal').classList.contains('active')"), true);
