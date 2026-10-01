@@ -3,6 +3,7 @@
 const api = window.electronAPI;
 const $ = id => document.getElementById(id);
 let currentCaseId = null;
+let continuingCaseId = null;
 let isRunning = false;
 let creating = false;
 let catalog = [];
@@ -41,10 +42,14 @@ function bind(id, action) {
 }
 
 async function initApp() {
+  setupBranding();
   if (!api) { $('outputText').textContent = 'Start this application with Electron: npm start'; return; }
   setupNav();
   setupModals();
   bindButtons();
+  document.querySelectorAll('.module-card-active').forEach(card => card.addEventListener('click', () => {
+    void openModule(card).catch(reportError);
+  }));
   $('runBtn').disabled = true;
   $('saveCaseBtn').disabled = true;
   try {
@@ -56,10 +61,79 @@ async function initApp() {
   } catch (error) { reportError(error); }
 }
 
+function setupBranding() {
+  document.querySelectorAll('.brand-shell').forEach(image => {
+    image.addEventListener('error', () => { image.hidden = true; });
+    image.addEventListener('load', () => { image.hidden = false; });
+    // A local image can finish loading before DOMContentLoaded fires.
+    if (image.complete && image.naturalWidth === 0) image.hidden = true;
+  });
+}
+
+async function openModule(card) {
+  const view = card.dataset.go;
+  if (view === 'new-case') {
+    createNewCase(card.dataset.type);
+    return;
+  }
+  const startsSearch = view === 'runner' && card.dataset.tool;
+  if (startsSearch && !isRunning && !creating) {
+    // A new pathway must not reuse another search's target or case.
+    currentCaseId = null;
+    $('runTarget').value = '';
+    $('runCaseId').value = '';
+    $('runTool').value = card.dataset.tool;
+    $('outputText').textContent = 'Enter a username and click "Execute Tool" to start a new investigation.\n';
+  }
+  await showView(view);
+  if (startsSearch && !isRunning && !creating) $('runTarget').focus();
+}
+
+// A follow-up run is tied to one saved case. Normal Tool Runner navigation
+// explicitly restores its unrestricted (new-case) input controls.
+function selectRunnerTools(tools, preferredId) {
+  const select = $('runTool');
+  select.replaceChildren(...tools.map(tool => {
+    const option = node('option', '', tool.name + ' — ' + tool.description);
+    option.value = tool.id;
+    return option;
+  }));
+  if (tools.some(tool => tool.id === preferredId)) select.value = preferredId;
+}
+
+function resetRunnerContext() {
+  continuingCaseId = null;
+  currentCaseId = null;
+  $('runTarget').readOnly = false;
+  $('runCaseId').readOnly = false;
+  $('runTarget').value = '';
+  $('runCaseId').value = '';
+  selectRunnerTools(catalog, 'sherlock');
+}
+
+async function prepareFollowUpRun(item) {
+  if (isRunning || creating) throw new Error('Finish the current operation first.');
+  // Never offer incompatible or absent tools as working shortcuts.
+  const compatible = catalog.filter(tool => tool.type === item.type && installed.has(tool.id));
+  if (!compatible.length || !item.target) throw new Error('No compatible installed tool is available for this case.');
+  closeDetailModal();
+  continuingCaseId = item.id;
+  currentCaseId = item.id;
+  $('runTarget').value = item.target;
+  $('runCaseId').value = item.id;
+  $('runTarget').readOnly = true;
+  $('runCaseId').readOnly = true;
+  selectRunnerTools(compatible, compatible.find(tool => tool.id !== item.tool)?.id || compatible[0].id);
+  $('outputText').textContent = 'Choose a compatible installed tool and click Execute Tool. Results will be saved under the existing case.\n';
+  await showView('runner');
+  $('runTool').focus();
+}
+
 function bindButtons() {
   ['quickInvestigationBtn', 'quickInvestigationBtn2', 'createNewCaseBtn'].forEach(id => bind(id, createNewCase));
-  ['checkAllToolsBtn', 'checkAllToolsBtn2'].forEach(id => bind(id, checkAllTools));
-  bind('refreshDashboardBtn', () => Promise.all([checkAllTools(), loadDashboard()]));
+  ['checkAllToolsBtn2', 'checkAllToolsBtnSettings'].forEach(id => bind(id, checkAllTools));
+  bind('viewCasesBtn', () => showView('investigations'));
+  bind('refreshDashboardBtn', loadDashboard);
   bind('loadCasesBtn', loadCases);
   bind('runBtn', runTool);
   bind('killBtn', killTool);
@@ -76,6 +150,7 @@ function bindButtons() {
 function setupNav() {
   document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', event => {
     event.preventDefault();
+    if (item.dataset.view === 'runner' && !isRunning && !creating) resetRunnerContext();
     void showView(item.dataset.view).catch(reportError);
   }));
 }
@@ -142,6 +217,7 @@ async function loadDashboard() {
   $('completedCount').textContent = cases.filter(item => item.status === 'complete').length;
   $('resultsCount').textContent = cases.reduce((sum, item) => sum + (item.resultCount || 0), 0);
   $('caseCount').textContent = cases.length;
+  $('casesTotal').textContent = cases.length;
   const items = cases.slice(0, 10).map(item => {
     const card = node('div', 'activity-item');
     const info = node('div', 'activity-info');
@@ -194,6 +270,7 @@ async function runTool() {
     else if (result.status === 'cancelled') appendConsole('\n⏹️ Stopped\n');
     else appendConsole(`\n❌ ${result.error || `Tool exited with code ${result.exitCode}.`}\n`);
     if (result.outputDirectory) appendConsole(`Saved: ${result.outputDirectory}\n`);
+    if (result.evidenceWarning) appendConsole(`Warning: ${result.evidenceWarning}\n`);
   } catch (error) { appendConsole(`\n❌ ${error.message}\n`); }
   finally {
     progressCleanup?.();
@@ -228,8 +305,9 @@ async function loadCases() {
   $('casesList').replaceChildren(...(cards.length ? cards : [node('div', 'empty-state', 'No cases yet.')]));
 }
 
-function createNewCase() {
+function createNewCase(preferredType) {
   if (isRunning) throw new Error('Wait for the current tool to finish, or stop it first.');
+  $('caseType').value = ['username', 'email', 'phone', 'domain'].includes(preferredType) ? preferredType : 'username';
   $('newCaseModal').classList.add('active');
   $('caseTitle').focus();
 }
@@ -257,6 +335,7 @@ async function saveCase() {
     await api.saveCaseMeta({ caseId, meta: { title, target, type, notes } });
     creating = false;
     closeModal();
+    resetRunnerContext();
     $('runTarget').value = target;
     $('runTool').value = selected;
     $('runCaseId').value = caseId;
@@ -282,7 +361,9 @@ function fileSize(bytes) {
 
 async function openCaseDetail(id) {
   const request = ++detailRequest;
-  const [cases, files] = await Promise.all([api.getAllCases(), api.getResults(id)]);
+  const [cases, files, evidence] = await Promise.all([api.getAllCases(), api.getResults(id),
+    api.getCaseEvidence(id).catch(error => ({ records: [], warnings: [{ message: `Provenance unavailable: ${error.message}` }] }))]);
+  const { records: manifests, warnings } = evidence;
   if (request !== detailRequest) return;
   const item = cases.find(record => record.id === id);
   if (!item) throw new Error('Case not found.');
@@ -291,9 +372,10 @@ async function openCaseDetail(id) {
   const info = node('div', 'detail-section');
   info.append(node('h4', '', 'Case Info'));
   for (const [label, value] of [['Case ID', id], ['Title', item.title], ['Target', item.target], ['Type', item.type], ['Tool', item.tool],
-    ['Status', statusBadge(item.status, 'case-status')], ['Created', item.created ? new Date(item.created).toLocaleString() : '—'], ['Notes', item.notes], ['Error', item.error]]) info.append(row(label, value));
+    ['Status', statusBadge(item.status, 'case-status')], ['Created', item.created ? new Date(item.created).toLocaleString() : '—'],
+    ['Notes', item.notes], ['Error', item.error], ['Provenance capture', item.evidenceStatus], ['Provenance warning', item.evidenceWarning]]) info.append(row(label, value));
   const results = node('div', 'detail-section');
-  results.append(node('h4', '', `Results (${files.length})`));
+  results.append(node('h4', '', `Case files (${files.length})`));
   const list = node('div', 'results-list');
   for (const file of files) {
     const line = node('div', 'result-file');
@@ -307,14 +389,36 @@ async function openCaseDetail(id) {
   results.append(list);
   const actions = node('div', 'detail-section full');
   const buttons = node('div', 'detail-actions');
-  buttons.append(button('📁 Open Folder', 'btn btn-primary', () => api.openResultsFolder(id)),
+  const compatible = catalog.filter(tool => tool.type === item.type && installed.has(tool.id));
+  if (compatible.length && item.target && item.status !== 'running') {
+    buttons.append(button('＋ Add tool run', 'btn btn-primary', () => prepareFollowUpRun(item)));
+  }
+  buttons.append(button('📁 Open Folder', 'btn btn-secondary', () => api.openResultsFolder(id)),
     button('📦 Export ZIP', 'btn btn-secondary', () => api.exportCase({ caseId: id })),
     button('🗑️ Delete', 'btn btn-danger', async () => {
       const result = await api.deleteCase(id);
       if (result.success) { closeDetailModal(); await Promise.all([loadCases(), loadDashboard()]); }
     }));
   actions.append(node('h4', '', 'Actions'), buttons);
-  grid.append(info, results, actions);
+  const provenance = node('div', 'detail-section full');
+  provenance.append(node('h4', '', `Run provenance (${manifests.length})`));
+  provenance.append(node('p', 'provenance-note',
+    'These are locally captured tool outputs, not independently verified identities or original public sources. SHA-256 hashes are recorded at capture time; later changes are not automatically checked.'));
+  if (!manifests.length) provenance.append(node('p', 'provenance-note', 'No evidence manifests yet. Existing case files remain available above.'));
+  for (const warning of warnings) {
+    provenance.append(node('p', 'provenance-note', `Warning: ${warning.runId ? warning.runId + ' · ' : ''}${warning.message}`));
+  }
+  for (const manifest of manifests) {
+    const record = node('div', 'provenance-run');
+    record.append(node('strong', '', `${manifest.tool} · ${manifest.status} · ${new Date(manifest.started).toLocaleString()}`));
+    record.append(node('div', 'provenance-note', `${manifest.artifacts.length} tool output(s) · Review: unreviewed${manifest.truncated ? ' · Artifact listing truncated' : ''}`));
+    for (const artifact of manifest.artifacts) {
+      record.append(node('div', 'provenance-artifact',
+        `${artifact.name} · ${fileSize(artifact.size)} · SHA-256: ${artifact.sha256 || 'Not calculated (size limit)'}`));
+    }
+    provenance.append(record);
+  }
+  grid.append(info, results, provenance, actions);
   $('caseDetailContent').replaceChildren(grid);
   $('caseDetailModal').classList.add('active');
   $('closeDetailModalBtn').focus();
@@ -356,8 +460,7 @@ function setupModals() {
 async function clearAllData() {
   const result = await api.clearAllResults();
   if (result.success) {
-    currentCaseId = null;
-    $('runCaseId').value = '';
+    resetRunnerContext();
     closeDetailModal();
     await Promise.all([loadDashboard(), loadCases()]);
   }

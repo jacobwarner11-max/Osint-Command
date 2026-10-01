@@ -7,46 +7,46 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="dark-theme">
+<body class="pearl-theme">
   <div class="app">
     <aside class="sidebar">
-      <div class="sidebar-header"><h1>🔍 OSINT Command</h1><p>Desktop v2.1</p></div>
+      <div class="sidebar-header"><img class="brand-shell" src="assets/approved-emblem-transparent.png" alt="Pearl and platinum shell with emerald emblem"><h1>OSINT Command Center</h1><p>Research • Capture • Review</p></div>
       <nav class="nav" aria-label="Main navigation">
         <a href="#dashboard" class="nav-item active" data-view="dashboard"><span>📊</span> Dashboard</a>
         <a href="#investigations" class="nav-item" data-view="investigations"><span>📁</span> Investigations <span class="badge" id="caseCount">0</span></a>
+        <a href="#settings" class="nav-item" data-view="settings"><span>⚙️</span> Settings</a>
+        <div class="nav-section-title">ADVANCED TOOLS</div>
         <a href="#tools" class="nav-item" data-view="tools"><span>🛠️</span> Tools</a>
         <a href="#runner" class="nav-item" data-view="runner"><span>⚡</span> Tool Runner</a>
-        <a href="#settings" class="nav-item" data-view="settings"><span>⚙️</span> Settings</a>
       </nav>
-      <div class="sidebar-footer">
-        <div class="tool-status" id="toolStatusList">
-          <h4>Tool Status</h4>
-          <div class="status-item" id="sherlockStatus"><span class="dot"></span> Sherlock</div>
-          <div class="status-item" id="maigretStatus"><span class="dot"></span> Maigret</div>
-          <div class="status-item" id="holeheStatus"><span class="dot"></span> Holehe</div>
-          <div class="status-item" id="phoneinfogaStatus"><span class="dot"></span> PhoneInfoga</div>
-          <div class="status-item" id="theharvesterStatus"><span class="dot"></span> theHarvester</div>
-          <div class="status-item" id="subfinderStatus"><span class="dot"></span> Subfinder</div>
-          <div class="status-item" id="amassStatus"><span class="dot"></span> Amass</div>
-        </div>
-        <div class="app-info"><span id="platformInfo"></span></div>
-      </div>
+      <div class="sidebar-footer"><div class="app-info"><span id="platformInfo"></span></div></div>
     </aside>
     <main class="main">
       <section class="view active" id="dashboard-view">
-        <header class="view-header"><h2>Dashboard</h2><button class="btn btn-primary" id="quickInvestigationBtn">🔍 New Investigation</button></header>
+        <header class="view-header dashboard-top"><div><div class="eyebrow">PORT ARANSAS · TEXAS</div><h2>OSINT COMMAND CENTER</h2><p class="dashboard-subtitle">Research · Capture · Review</p></div><button class="btn btn-primary" id="quickInvestigationBtn">＋ New Investigation</button></header>
+        <div class="hero-banner"><div class="hero-mark">✦ &nbsp; THE RESEARCH DESK &nbsp; ✦</div><h3>BUILT TO TAKE THE HIT</h3><p>Local research. Findings remain unreviewed.</p><span>PORT ARANSAS · TEXAS</span></div>
+        <div class="dashboard-section-title"><h3>Investigation Desk</h3><span>Choose a research category</span></div>
+        <div class="module-grid">
+          <button type="button" class="module-card module-card-active" data-go="new-case" data-type="username" data-category="people"><span class="module-icon">♙</span><strong>People &amp; Identity</strong><small>Username, email and phone searches</small><span class="module-stage module-stage-ready">Start investigation</span></button>
+          <div class="module-card module-card-planned"><span class="module-icon">⌁</span><strong>Vehicles &amp; Assets</strong><small>License plate, VIN and asset research</small><span class="module-stage">In development</span></div>
+          <button type="button" class="module-card module-card-active" data-go="new-case" data-type="domain" data-category="web"><span class="module-icon">⌘</span><strong>Organizations &amp; Websites</strong><small>Domain and web infrastructure searches</small><span class="module-stage module-stage-ready">Start investigation</span></button>
+          <div class="module-card module-card-planned"><span class="module-icon">⚖</span><strong>Public &amp; Legal Records</strong><small>Courts, warrants and public records</small><span class="module-stage">In development</span></div>
+          <div class="module-card module-card-planned"><span class="module-icon">▧</span><strong>Media &amp; Documents</strong><small>Images, metadata and document research</small><span class="module-stage">In development</span></div>
+          <div class="module-card module-card-planned"><span class="module-icon">⌖</span><strong>Places &amp; History</strong><small>Locations, archives and historical research</small><span class="module-stage">In development</span></div>
+        </div>
+        <div class="dashboard-section-title"><h3>Live Overview</h3><span>Values below come from local application data</span></div>
         <div class="stats-grid">
           <div class="stat-card"><h3>Active</h3><div class="stat-value" id="activeCount">0</div></div>
           <div class="stat-card"><h3>Completed</h3><div class="stat-value" id="completedCount">0</div></div>
-          <div class="stat-card"><h3>Tools Ready</h3><div class="stat-value" id="toolsReady">0</div></div>
-          <div class="stat-card"><h3>Total Results</h3><div class="stat-value" id="resultsCount">0</div></div>
+          <div class="stat-card"><h3>Saved Cases</h3><div class="stat-value" id="casesTotal">0</div></div>
+          <div class="stat-card"><h3>Result Files</h3><div class="stat-value" id="resultsCount">0</div></div>
         </div>
-        <div class="quick-actions"><h3>Quick Start</h3><div class="btn-group">
+        <div class="quick-actions"><h3>Case Actions</h3><div class="btn-group">
           <button class="btn btn-primary" id="quickInvestigationBtn2">🔍 New Investigation</button>
-          <button class="btn btn-secondary" id="checkAllToolsBtn">🔧 Check Tools</button>
+          <button class="btn btn-secondary" id="viewCasesBtn">📁 View Cases</button>
           <button class="btn btn-secondary" id="refreshDashboardBtn">🔄 Refresh</button>
         </div></div>
-        <section class="recent-activity"><h3>Recent Activity</h3><div id="activityList"></div></section>
+        <section class="recent-activity"><h3>Recent Activity <small>From saved local cases</small></h3><div id="activityList"></div></section>
       </section>
       <section class="view" id="investigations-view">
         <header class="view-header"><h2>Investigations</h2><div class="header-actions">
@@ -89,6 +89,19 @@
       <section class="view" id="settings-view">
         <header class="view-header"><h2>Settings</h2></header>
         <div class="settings-panel">
+          <div class="setting-section"><h3>System Health</h3>
+            <p class="system-health-note">Integration checks belong here, not on the investigation dashboard. Ready indicates that the executable was found; some sources may still require configuration.</p>
+            <div class="system-health-summary">Detected tools: <strong id="toolsReady">0</strong> / 7 <button class="btn btn-sm btn-secondary" id="checkAllToolsBtnSettings">Recheck tools</button></div>
+            <div class="tool-status" id="toolStatusList">
+              <div class="status-item" id="sherlockStatus"><span class="dot"></span> Sherlock</div>
+              <div class="status-item" id="maigretStatus"><span class="dot"></span> Maigret</div>
+              <div class="status-item" id="holeheStatus"><span class="dot"></span> Holehe</div>
+              <div class="status-item" id="phoneinfogaStatus"><span class="dot"></span> PhoneInfoga</div>
+              <div class="status-item" id="theharvesterStatus"><span class="dot"></span> theHarvester</div>
+              <div class="status-item" id="subfinderStatus"><span class="dot"></span> Subfinder</div>
+              <div class="status-item" id="amassStatus"><span class="dot"></span> Amass</div>
+            </div>
+          </div>
           <div class="setting-section"><h3>Paths</h3><div class="setting-item"><label>Results Directory</label><code id="resultsPath">Loading...</code><button class="btn btn-sm btn-secondary" id="openResultsRootBtn">Open</button></div></div>
           <div class="setting-section"><h3>Application</h3>
             <div class="setting-item"><label>Version</label><span id="appVersion">2.1.1</span></div>
