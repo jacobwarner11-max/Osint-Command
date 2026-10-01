@@ -14,8 +14,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAllCases: async () => statuses.map(status => ({ id: `fixture-${status}`,
     title: `Sample ${status} case`, target: 'example.com', type: 'domain',
     status, tool: 'subfinder', created: 1, resultCount: 0 })),
-  getResults: async () => ['meta.json', 'run-fixture/run.json', 'run-fixture/evidence.json', 'run-fixture/stdout.log']
-    .map(name => ({ name, size: 12 })),
+  getResults: async () => ['meta.json', 'run-fixture/run.json', 'run-fixture/evidence.json', 'run-fixture/stdout.log',
+    'run-fixture/normalized-results.json'].map(name => ({ name, size: 12 })),
   getCaseEvidence: async id => {
     if (id === 'fixture-failed') throw new Error('Simulated evidence read failure.');
     if (id === 'fixture-cancelled') return { records: [], warnings: [
@@ -24,6 +24,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return { records: [{ runId: 'run-fixture', tool: 'subfinder', status: 'complete',
       started: 1, reviewStatus: 'unreviewed', truncated: false,
       artifacts: [{ name: 'stdout.log', size: 12, sha256: '0'.repeat(64) }] }], warnings: [] };
+  },
+  getCaseFindings: async id => {
+    if (id === 'fixture-failed') throw new Error('Simulated normalized result read failure.');
+    if (id !== 'fixture-complete') return { findings: [], warnings: [], reportedCount: 0, uniqueCount: 0 };
+    return { findings: [{
+      site: 'Example', url: 'https://example.com/sample', usernames: ['sample'],
+      tools: ['sherlock', 'maigret'], classification: 'corroborated', siteTags: ['social'],
+      corroboration: 'Same public account URL was reported by two or more distinct tools; this does not verify the account owner’s identity.'
+    }], warnings: [], reportedCount: 2, uniqueCount: 1 };
   },
   getAppInfo: async () => ({ platform: process.platform, arch: process.arch,
     versions: process.versions, resultsDir: 'Isolated UI test data', appVersion: 'test' }),
