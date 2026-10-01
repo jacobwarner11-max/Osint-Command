@@ -10,6 +10,7 @@ const { TOOLS, getTool, validateTarget, resolveTool } = require('./lib/tools');
 const { startProcess } = require('./lib/process');
 const { createZip } = require('./lib/archive');
 const { captureRunEvidence, listCaseEvidence } = require('./lib/evidence');
+const { normalizeRun, listCaseFindings } = require('./lib/results');
 
 let mainWindow, store;
 let clearing = false, quitting = false, mayQuit = false;
@@ -63,11 +64,16 @@ async function runTool(event, request) {
     let runDirectory, executable, args, result;
     let evidenceWarning = null;
     let evidenceStatus = 'not-captured';
+    let evidenceManifest = null;
+    let normalizationWarning = null;
+    let normalizationStatus = 'not-run';
+    let normalizedFindingCount = 0;
     const started = Date.now();
     try {
       store.update(caseId, { title: existing?.title || `${config.name} investigation of ${target}`,
         target, type: config.type, tool, status: 'running', started, lastRunId: runId, error: null,
-        evidenceStatus: 'pending', evidenceWarning: null });
+        evidenceStatus: 'pending', evidenceWarning: null, normalizationStatus: 'pending', normalizationWarning: null,
+        normalizedFindingCount: 0 });
       const resolved = await resolveTool(tool);
       if (entry.cancelRequested) result = { success: false, status: 'cancelled', error: 'Stopped by user.', duration: Date.now() - started };
       else {
@@ -77,7 +83,8 @@ async function runTool(event, request) {
         executable = resolved.executable;
         args = config.args(target, runDirectory);
         writeJSON(path.join(runDirectory, 'run.json'), { tool, target, caseId, runId, executable, args, started,
-          status: 'running', evidenceStatus: 'pending', evidenceWarning: null });
+          status: 'running', evidenceStatus: 'pending', evidenceWarning: null,
+          normalizationStatus: 'pending', normalizationWarning: null, normalizedFindingCount: 0 });
         entry.task = startProcess({ executable, args, cwd: runDirectory, env: resolved.env, timeout: config.timeout,
           onProgress: data => sendProgress(event, { ...data, tool, caseId, runId }) });
         result = await entry.task.result;
@@ -91,24 +98,37 @@ async function runTool(event, request) {
         const runMetadata = { tool, target, caseId, runId,
           executable, args, started, finished, status: result.status,
           exitCode: result.exitCode ?? null, signal: result.signal ?? null, duration: result.duration, error: result.error };
-        writeJSON(safePath(runDirectory, 'run.json'), { ...runMetadata, evidenceStatus: 'pending', evidenceWarning: null });
+        writeJSON(safePath(runDirectory, 'run.json'), { ...runMetadata, evidenceStatus: 'pending', evidenceWarning: null,
+          normalizationStatus: 'pending', normalizationWarning: null, normalizedFindingCount: 0 });
         try {
-          captureRunEvidence({ caseId, runId, runDirectory, tool, target, started, finished, status: result.status });
+          evidenceManifest = captureRunEvidence({ caseId, runId, runDirectory, tool, target, started, finished, status: result.status });
           evidenceStatus = 'captured';
         } catch (error) {
           evidenceStatus = 'failed';
           evidenceWarning = `Evidence manifest could not be captured: ${error.message}`;
         }
-        writeJSON(safePath(runDirectory, 'run.json'), { ...runMetadata, evidenceStatus, evidenceWarning });
+        try {
+          const normalized = normalizeRun({ caseId, runId, runDirectory, tool, target, runStatus: result.status, evidence: evidenceManifest });
+          normalizationStatus = normalized.status;
+          normalizedFindingCount = normalized.count;
+          normalizationWarning = normalized.warnings?.length ? normalized.warnings.join(' ') : null;
+        } catch (error) {
+          normalizationStatus = 'failed';
+          normalizationWarning = `Normalized findings could not be captured: ${error.message}`;
+        }
+        writeJSON(safePath(runDirectory, 'run.json'), { ...runMetadata, evidenceStatus, evidenceWarning,
+          normalizationStatus, normalizationWarning, normalizedFindingCount });
       }
       store.update(caseId, { status: result.status, finished, duration: result.duration,
-        exitCode: result.exitCode ?? null, error: result.error || null, evidenceStatus, evidenceWarning });
+        exitCode: result.exitCode ?? null, error: result.error || null, evidenceStatus, evidenceWarning,
+        normalizationStatus, normalizationWarning, normalizedFindingCount });
     } catch (error) {
       result = { ...result, success: false, status: 'failed', error: `${result.error || ''} Could not save case state: ${error.message}`.trim() };
     } finally {
       if (active.get(caseId) === entry) active.delete(caseId);
     }
-    return { ...result, caseId, runId, outputDirectory: runDirectory || null, evidenceStatus, evidenceWarning };
+    return { ...result, caseId, runId, outputDirectory: runDirectory || null, evidenceStatus, evidenceWarning,
+      normalizationStatus, normalizationWarning, normalizedFindingCount };
   })();
   return entry.completion;
 }
@@ -167,6 +187,7 @@ function registerIPC() {
   handle('get-all-cases', () => store.list());
   handle('get-results', (_event, id) => store.files(validId(id)));
   handle('get-case-evidence', (_event, id) => listCaseEvidence(store.directory(validId(id)), id));
+  handle('get-case-findings', (_event, id) => listCaseFindings(store.directory(validId(id)), id));
   handle('save-case-meta', (_event, request) => {
     const caseId = validId(request?.caseId);
     idleCase(caseId);

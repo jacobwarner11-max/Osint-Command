@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', Object.freeze({
   getAllCases: () => ipcRenderer.invoke('get-all-cases'),
   getResults: id => ipcRenderer.invoke('get-results', id),
   getCaseEvidence: id => ipcRenderer.invoke('get-case-evidence', id),
+  getCaseFindings: id => ipcRenderer.invoke('get-case-findings', id),
   saveCaseMeta: request => ipcRenderer.invoke('save-case-meta', request),
   deleteCase: id => ipcRenderer.invoke('delete-case', id),
   openResultsFolder: id => ipcRenderer.invoke('open-results-folder', id),

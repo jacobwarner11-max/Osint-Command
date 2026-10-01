@@ -148,6 +148,26 @@ this evidence foundation. Existing external tools still require installation.
 This is the first piece of a multi-source engine, **not** automatic cross-source
 correlation, verification, or a complete 21-module implementation.
 
+## Normalized username findings (in development)
+
+Completed Sherlock and Maigret runs now produce a derived
+`normalized-results.json` record after raw evidence capture. Sherlock candidates are
+read from its text output or saved console log. Maigret candidates are read from its
+`report_*_simple.json` exports, whose upstream simple format contains claimed
+accounts only. The raw provider files remain the evidence source; normalized records
+reference their capture-time SHA-256 when available and are excluded from dashboard
+result-file counts.
+
+Case Details shows both **unique** normalized account URLs and the total number of
+tool reports. A finding is **candidate** when one tool reports the URL and
+**corroborated** when two or more distinct tools report the same URL. Corroborated
+does not mean the person behind the target owns the account; it only describes
+cross-tool agreement on the public account URL. Maigret provider tags are labeled
+**Site tags (provider metadata)** and are not presented as a person's interests.
+
+This first normalization layer supports Sherlock and Maigret username runs. Other
+tool types remain raw/provenance-only until a tested parser is added.
+
 ## Data and safety model
 
 Investigation data is stored locally under Electron's application user-data directory. The application validates case IDs and target formats, blocks path traversal and symlink traversal in the results store, restricts renderer IPC to the trusted main frame, disables renderer Node integration, denies new-window/navigation requests, and executes tools without a shell.

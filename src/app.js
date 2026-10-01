@@ -361,9 +361,12 @@ function fileSize(bytes) {
 
 async function openCaseDetail(id) {
   const request = ++detailRequest;
-  const [cases, files, evidence] = await Promise.all([api.getAllCases(), api.getResults(id),
-    api.getCaseEvidence(id).catch(error => ({ records: [], warnings: [{ message: `Provenance unavailable: ${error.message}` }] }))]);
+  const [cases, files, evidence, normalized] = await Promise.all([api.getAllCases(), api.getResults(id),
+    api.getCaseEvidence(id).catch(error => ({ records: [], warnings: [{ message: `Provenance unavailable: ${error.message}` }] })),
+    api.getCaseFindings(id).catch(error => ({ findings: [], warnings: [{ message: `Normalized findings unavailable: ${error.message}` }],
+      reportedCount: 0, uniqueCount: 0 }))]);
   const { records: manifests, warnings } = evidence;
+  const normalizedFindings = Array.isArray(normalized.findings) ? normalized.findings : [];
   if (request !== detailRequest) return;
   const item = cases.find(record => record.id === id);
   if (!item) throw new Error('Case not found.');
@@ -373,7 +376,9 @@ async function openCaseDetail(id) {
   info.append(node('h4', '', 'Case Info'));
   for (const [label, value] of [['Case ID', id], ['Title', item.title], ['Target', item.target], ['Type', item.type], ['Tool', item.tool],
     ['Status', statusBadge(item.status, 'case-status')], ['Created', item.created ? new Date(item.created).toLocaleString() : '—'],
-    ['Notes', item.notes], ['Error', item.error], ['Provenance capture', item.evidenceStatus], ['Provenance warning', item.evidenceWarning]]) info.append(row(label, value));
+    ['Notes', item.notes], ['Error', item.error], ['Provenance capture', item.evidenceStatus], ['Provenance warning', item.evidenceWarning],
+    ['Normalization', item.normalizationStatus], ['Normalization warning', item.normalizationWarning],
+    ['Last normalized count', item.normalizedFindingCount]]) info.append(row(label, value));
   const results = node('div', 'detail-section');
   results.append(node('h4', '', `Case files (${files.length})`));
   const list = node('div', 'results-list');
@@ -387,6 +392,33 @@ async function openCaseDetail(id) {
   }
   if (!files.length) list.append(node('div', 'empty-state', 'No files'));
   results.append(list);
+
+  const findings = node('div', 'detail-section full');
+  const uniqueCount = Number.isSafeInteger(normalized.uniqueCount) ? normalized.uniqueCount : normalizedFindings.length;
+  const reportedCount = Number.isSafeInteger(normalized.reportedCount) ? normalized.reportedCount : normalizedFindings.length;
+  findings.append(node('h4', '', `Normalized findings (${uniqueCount} unique · ${reportedCount} reported)`));
+  findings.append(node('p', 'provenance-note',
+    'Candidate means one tool reported the public account URL. Corroborated means two or more distinct tools reported the same URL. Neither label verifies who owns the account.'));
+  for (const warning of normalized.warnings || []) {
+    findings.append(node('p', 'provenance-note', `Warning: ${warning.runId ? warning.runId + ' · ' : ''}${warning.message}`));
+  }
+  if (!normalizedFindings.length) {
+    findings.append(node('p', 'provenance-note', 'No normalized account findings yet. Sherlock and Maigret runs are supported in this first normalization layer.'));
+  }
+  for (const finding of normalizedFindings) {
+    const record = node('div', 'provenance-run');
+    record.append(node('strong', '', `${finding.site || 'Unknown site'} · ${finding.classification || 'candidate'}`));
+    record.append(node('div', 'provenance-artifact', finding.url || 'No URL'));
+    const usernames = Array.isArray(finding.usernames) && finding.usernames.length ? finding.usernames.join(', ') : '—';
+    const tools = Array.isArray(finding.tools) && finding.tools.length ? finding.tools.join(', ') : '—';
+    record.append(node('div', 'provenance-note', `Username(s): ${usernames} · Tool(s): ${tools}`));
+    if (Array.isArray(finding.siteTags) && finding.siteTags.length) {
+      record.append(node('div', 'provenance-note', `Site tags (provider metadata): ${finding.siteTags.join(', ')}`));
+    }
+    if (finding.corroboration) record.append(node('div', 'provenance-note', finding.corroboration));
+    findings.append(record);
+  }
+
   const actions = node('div', 'detail-section full');
   const buttons = node('div', 'detail-actions');
   const compatible = catalog.filter(tool => tool.type === item.type && installed.has(tool.id));
@@ -418,7 +450,7 @@ async function openCaseDetail(id) {
     }
     provenance.append(record);
   }
-  grid.append(info, results, provenance, actions);
+  grid.append(info, results, findings, provenance, actions);
   $('caseDetailContent').replaceChildren(grid);
   $('caseDetailModal').classList.add('active');
   $('closeDetailModalBtn').focus();
